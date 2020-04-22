@@ -1,7 +1,7 @@
 # HentaiFoxData
 Contains scraped datamaps and scripts to search them.
 
-Tags v1 contains every gallery on Hentaifox (last data-update: 22.04.2020) and a "finder.exe" to search for all galleries with a specified amount of enterd tags. 
+Tags v1 contains every gallery on Hentaifox (last data-update: 22.04.2020) and a "finder.exe" to search for all galleries with a specified amount of entered tags. 
 
 It will output a "results.txt" with the URLs to the galleries.
 
