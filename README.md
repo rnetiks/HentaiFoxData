@@ -9,7 +9,7 @@ MultiSearchv1 contains:
 1. A datamap with every gallery on Hentaifox.com
 2. A Search.exe to search for galleries with certian criteria.
 3. An Updater.exe to update the datamap and search for gaps. I'd suggest running once or twice a week. The standard values are set for a fast update without searching for gaps in the whole datamap.
-4. A counter.exe to rewrite the data.json, which contains the amount of galleries which have a certain criteria. I suggest running it from time to time (after updates to the datamap). You can also use the data.json to look how much entries each criteria has.
+4. A counter.exe to rewrite the data.json, which contains the amount of galleries all having a certain criteria. I suggest running it from time to time (after updates to the datamap). You can also use the data.json to look how much entries each criteria has.
 
 DO NOT CHANGE ANY .JSON FILES!
 
