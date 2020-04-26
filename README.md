@@ -18,6 +18,7 @@ This project is written in Python3.8 using PyQt5 as GUI. Conversion to executabl
 
 
 How to use Search.exe:
+
 The GUI is pretty self explanatory but anyways...
 Select the type of criteria you want to filter the list for with the dropdownmenu.
 You can type the frist letters of the criteria you're searching for if you don't want to search forever.
@@ -28,10 +29,12 @@ To start the searchengine just click the Search button at the bottom.
 You can find the .txt containing the URLs to the galleries in a folder called "results".
 
 How to use Updater.exe:
+
 With the first slider you can select the first gallery which the script is going to search for.
 With the second slider you can select the last gallery which the script is going to search for.
 The script will search for every gallery inbetween these two numbers. The minimum is 1 and the maximum the currently newest gallery on HF.
 The higher the number (last minus first), the longer takes the the script to finish. If you just want to update the datamap I suggest not changing the values and searching for the last 500 galleries.
 
 How to use counter.exe:
+
 Just run it.
