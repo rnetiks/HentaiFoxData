@@ -1,40 +1,16 @@
 # HentaiFoxData
-Contains scraped datamaps and scripts to search them.
+This is the sourcecode of my Windows-Application HentaiFoxDesktop.
 
-Tags v1 is outdated!
+You can download the finished version on the releases tab.
+It comes with a "compiled" (made using pyinstaller) "HFDesktop3.exe" which you can run without the need of a Python 3.8 installation and all the used libraries.
 
-MultiSearch features an executable to search trough the entire HentaiFox database for galleries with the matching criteria.
+HentaiFox Desktop features:
 
-MultiSearchv1 contains:
-1. A datamap with every gallery on Hentaifox.com
-2. A Search.exe to search for galleries with certian criteria.
-3. An Updater.exe to update the datamap and search for gaps. I'd suggest running once or twice a week. The standard values are set for a fast update without searching for gaps in the whole datamap.
-4. A counter.exe to rewrite the data.json, which contains the amount of galleries all having a certain criteria. I suggest running it from time to time (after updates to the datamap). You can also use the data.json to look how much entries each criteria has.
+1. A custom Browser tab made only for browsing hentaifox.com!
+2. A multi-search tab where you can white- and blacklist tags, parodies, characters, artists, groups and categories. 
+3. A Result Viewer tab where you can view the results from using the multisearch engine. You can also load .result files you got from other people by dropping them in the "results (JSON)" folder.
+4. A update tab where you can update the local datamap. The datamap is used for the multisearch engine and contains information about every gallery on hentaifox. I recommend running it once a week. If you for some reason completly f-ed up the datamap, you can delete all the files in the tags, parodies, characters, aritsts, groups and categroies folder and set the slider in the updates tab to everything. I suggest using a VPN when doing that, because updating the datamap is a pretty rich webscraper.
 
-DO NOT CHANGE ANY .JSON FILES!
+If the programs crashes for seemingly no reason when using the browser, try deleting the cache folder found at C:\User\[user]\AppData\Local\HentaiFox
 
-Don't worry if starting the .exe files takes a bit. 
-This project is written in Python3.8 using PyQt5 as GUI. Conversion to executables by Pyinstaller.
-
-
-How to use Search.exe:
-
-The GUI is pretty self explanatory but anyways...
-Select the type of criteria you want to filter the list for with the dropdownmenu.
-You can type the frist letters of the criteria you're searching for if you don't want to search forever.
-Select a criterian by clicking on it and add it to the searchcriterias (right list).
-If you want to remove a criteria, select it in the right list and click the remove button.
-You can add as many criterias as you like.
-To start the searchengine just click the Search button at the bottom.
-You can find the .txt containing the URLs to the galleries in a folder called "results".
-
-How to use Updater.exe:
-
-With the first slider you can select the first gallery which the script is going to search for.
-With the second slider you can select the last gallery which the script is going to search for.
-The script will search for every gallery inbetween these two numbers. The minimum is 1 and the maximum the currently newest gallery on HF.
-The higher the number (last minus first), the longer takes the the script to finish. If you just want to update the datamap I suggest not changing the values and searching for the last 500 galleries.
-
-How to use counter.exe:
-
-Just run it.
+For any additional questions join the HentaiFox Discordserver: https://discord.gg/XtU5qp or DM me on Discord (N. Jächa#1707)
