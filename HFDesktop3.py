@@ -1597,11 +1597,12 @@ class Ui_HentaiFoxDesktop(QMainWindow):
 
         def load_results(self):
             self.resultlist.clear()
-            result_file = self.filebrowser.currentItem().text()
-            with open(f"Results (JSON)/{result_file}","r") as f:
-                data = json.load(f)
-                for gallery in data:
-                    self.resultlist.addItem(gallery)
+            if self.filebrowser.currentItem() != None:
+                result_file = self.filebrowser.currentItem().text()
+                with open(f"Results (JSON)/{result_file}","r") as f:
+                    data = json.load(f)
+                    for gallery in data:
+                        self.resultlist.addItem(gallery)
 
         def preview(self):
             if self.check_preview.isChecked() == False:
