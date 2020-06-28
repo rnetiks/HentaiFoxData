@@ -37,11 +37,6 @@ if True:
         item_list[type] = []
         for abc in data[type]:
             item_list[type].append(abc)
-#---random-word-----------------
-if True:
-    response = requests.get("https://random-word-api.herokuapp.com/word?number=1")
-    word=response.text[2:-2]
-    print(f'Random word: "{word}"')
 #---GUI-------------------------
 class Ui_HentaiFoxDesktop(QMainWindow):
     def setupUi(self, HentaiFoxDesktop):
@@ -152,12 +147,20 @@ class Ui_HentaiFoxDesktop(QMainWindow):
             sizePolicy.setHeightForWidth(self.zoomslider.sizePolicy().hasHeightForWidth())
             self.zoomslider.setSizePolicy(sizePolicy)
             self.zoomslider.setMinimumSize(QtCore.QSize(100, 0))
-            self.zoomslider.setMinimum(50)
-            self.zoomslider.setMaximum(150)
+            self.zoomslider.setMinimum(30)
+            self.zoomslider.setMaximum(190)
             self.zoomslider.setProperty("value", 100)
             self.zoomslider.setOrientation(QtCore.Qt.Horizontal)
             self.zoomslider.setObjectName("zoomslider")
             self.horizontalLayout.addWidget(self.zoomslider)
+            self.menu_button = QToolButton(self.browse)
+            self.menu_button.setIcon(QIcon("icons/menu.png"))
+            self.menu_button.setIconSize(QSize(30,30))
+            self.menu_button.setPopupMode(QToolButton.InstantPopup)
+            self.menu_button.setToolButtonStyle(Qt.ToolButtonIconOnly)
+            self.menu_button.setAutoRaise(True)
+            self.menu_button.setObjectName("menu_button")
+            self.horizontalLayout.addWidget(self.menu_button)
             self.horizontalLayout.setStretch(0, 1)
             self.horizontalLayout.setStretch(1, 1)
             self.horizontalLayout.setStretch(2, 1)
@@ -167,6 +170,7 @@ class Ui_HentaiFoxDesktop(QMainWindow):
             self.horizontalLayout.setStretch(6, 1)
             self.horizontalLayout.setStretch(7, 1)
             self.horizontalLayout.setStretch(8, 10)
+            self.horizontalLayout.setStretch(9, 1)
             self.verticalLayout.addLayout(self.horizontalLayout)
             self.tabs = QTabWidget(self.browse)
             self.tabs.setObjectName("tabs")
@@ -772,15 +776,33 @@ class Ui_HentaiFoxDesktop(QMainWindow):
             with open("data/bookmarks.json","r") as f:
                 bookmarks = json.load(f)
             self.bookmarkMenu.clear()
-            self.bookmarkMenu.addAction(QIcon("icons/add_Bookmark.png"),"Add Bookmark",self.add_bookmark)
+            self.bookmarkMenu.addAction(QIcon("icons/add_Bookmark.png"),"Add Bookmark",self.add_bookmark,QKeySequence("Ctrl+D"))
             self.bookmarkMenu.addSeparator()
-            self.bookmarkMenu.addAction(QIcon("icons/Reload_Arrow.png"),"Refresh Bookmarks",self.refresh_bookmarks)
+            self.bookmarkMenu.addAction(QIcon("icons/add_Bookmark.png"),"Add Bookmark",self.add_bookmark,QKeySequence("Ctrl+D"))
             self.bookmarkMenu.addSeparator()
             for bookmark in bookmarks:
                 self.bookmarkMenu.addAction(f"{bookmark}",lambda bookmark=bookmark: self.load_bookmark(bookmark))
             self.refresh_bookmarks()
-
             self.bookmark.setMenu(self.bookmarkMenu)
+
+            self.browserMenu = QMenu()
+            self.browserMenu.addAction(QIcon("icons/Back_Arrow.png"),"Back",lambda: self.tabs.currentWidget().back(),QKeySequence("Ctrl+Left"))
+            self.browserMenu.addAction(QIcon("icons/Forward_Arrow.png"),"Forward",lambda: self.tabs.currentWidget().forward(),QKeySequence("Ctrl+Right"))
+            self.browserMenu.addAction(QIcon("icons/Reload_Arrow.png"),"Reload",lambda: self.tabs.currentWidget().reload(),QKeySequence("Ctrl+R"))
+            self.browserMenu.addAction(QIcon("icons/Home-icon.png"),"Home",self.navigate_home,QKeySequence("Ctrl+H"))
+            self.browserMenu.addSeparator()
+            self.browserMenu.addAction(QIcon("icons/add_tab.png"),"New Tab",self.add_new_tab,QKeySequence("Ctrl+T"))
+            self.browserMenu.addAction(QIcon("icons/remove_tab.png"),"Close Tab",lambda i=self.tabs.currentIndex(): self.close_current_tab(i),QKeySequence("Ctrl+W"))
+            self.tabsMenu = self.browserMenu.addMenu(QIcon("icons/tab.png"),"Navigate Tabs")
+            self.tabsMenu.addAction("Switch to Tab 1",lambda: self.tabs.setCurrentIndex(0),QKeySequence("Ctrl+1"))
+            self.browserMenu.addSeparator()
+            self.browserMenu.addAction(QIcon("icons/zoom_in.png"),"Zoom in by 10%",lambda value=0.1:self.zoom_browser2(value=value),QKeySequence("Ctrl++"))
+            self.browserMenu.addAction(QIcon("icons/zoom_out.png"),"Zoom out by 10%",lambda value=-0.1:self.zoom_browser2(value=value),QKeySequence("Ctrl+-"))
+            self.browserMenu.addAction(QIcon("icons/zoom.png"),"Reset Zoom to 100%",self.reset_zoom,QKeySequence("Ctrl+0"))
+            self.browserMenu.addSeparator()
+            self.browserMenu.addAction(QIcon("icons/download.png"),"Download current Gallery",self.download,QKeySequence("Ctrl+S"))
+            self.menu_button.setMenu(self.browserMenu)
+
 #---------multi-search-setup-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
         if True:
             self.choosetype.addItem("-- Choose Type --")
@@ -809,7 +831,7 @@ class Ui_HentaiFoxDesktop(QMainWindow):
             self.tabs.tabBarDoubleClicked.connect(self.tab_open_doubleclick)
             self.tabs.currentChanged.connect(self.current_tab_changed)
             self.tabs.tabCloseRequested.connect(self.close_current_tab)
-            self.zoomslider.valueChanged.connect(self.zoom_browser)
+            self.zoomslider.sliderMoved.connect(self.zoom_browser)
             self.urlbar.returnPressed.connect(self.navigate_to_url)
             self.downloadbutton.clicked.connect(self.download)
 #---------multi-search-signals---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -888,13 +910,13 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         self.start.setText(_translate("HentaiFoxDesktop", "Start searching for gaps and updates at: 1"))
         self.stop.setText(_translate("HentaiFoxDesktop", "Stop searching for gaps and updates at: 1"))
         self.updatebutton.setText(_translate("HentaiFoxDesktop", "Update"))
-        self.label_version.setText(_translate("HentaiFoxDesktop", "<html><head/><body><p>HF-Desktop v.1.2</p></body></html>"))
+        self.label_version.setText(_translate("HentaiFoxDesktop", "<html><head/><body><p>HF-Desktop v.1.3</p></body></html>"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.update), _translate("HentaiFoxDesktop", "Update-Datamap"))
 #---------browser-functions------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     if True:
-        def add_new_tab(self, qurl=None, label="Blank"):
+        def add_new_tab(self, qurl=None, label="Loading..."):
             if qurl is None:
-                qurl = QUrl('')
+                qurl = QUrl('https://hentaifox.com/')
             browser = WebEngineView(self)
             browser.setUrl(qurl)
             i = self.tabs.addTab(browser, label)
@@ -916,9 +938,13 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         def current_tab_changed(self, i):
             qurl = self.tabs.currentWidget().url()
             self.update_urlbar(qurl, self.tabs.currentWidget())
+            self.update_zoom()
+            self.refresh_bookmarks()
+            self.update_tab_count()
+
+        def update_zoom(self):
             zoomvalue = int(self.tabs.currentWidget().zoomFactor()*100)
             self.zoomslider.setValue(zoomvalue)
-            self.refresh_bookmarks()
 
         def close_current_tab(self, i):
             if self.tabs.count() < 2:
@@ -959,8 +985,29 @@ class Ui_HentaiFoxDesktop(QMainWindow):
             zoomfactor = int(self.zoomslider.value())*0.01
             webview.setZoomFactor(zoomfactor)
 
+        def zoom_browser2(self,value):
+            if self.tabs.currentWidget().zoomFactor()+0.1 < 2 and value >0:
+                zoomfactor = self.tabs.currentWidget().zoomFactor()+value
+                self.tabs.currentWidget().setZoomFactor(zoomfactor)
+                self.update_zoom()
+            if value <0:
+                zoomfactor = self.tabs.currentWidget().zoomFactor()+value
+                self.tabs.currentWidget().setZoomFactor(zoomfactor)
+                self.update_zoom()
+
+        def reset_zoom(self):
+            self.tabs.currentWidget().setZoomFactor(1)
+            self.update_zoom()
+
         def download(self):
             url = self.tabs.currentWidget().url().url()
+            if url.startswith("https://hentaifox.com/g/"):
+                web = requests.get(f"{url}")
+                html = web.text
+                soup = BeautifulSoup(html, 'html.parser')
+                okay = str(soup.find('div',attrs={"class":"browse_buttons"}))
+                gal = okay[okay.find('href="')+6:okay.find('">Back')]
+                url = f"https://hentaifox.com{gal}"
             if url[:30] == "https://hentaifox.com/gallery/":
                 def download(url2,x):
                     resource = requests.get(url2)
@@ -980,48 +1027,58 @@ class Ui_HentaiFoxDesktop(QMainWindow):
                     show_all_pages_raw = str(soup.find("input", attrs={"type":"hidden","name":"load_pages","id":"load_pages"}))
                     id = show_all_id_raw[show_all_id_raw.find('value="')+7:-3]
                     pages = show_all_pages_raw[show_all_pages_raw.find('value="')+7:-3]
-                    os.mkdir(f"./{title}")
-                    msg = QtWidgets.QMessageBox()
-                    msg.setWindowTitle("Download Started")
-                    msg.setText(f'About to start the download of\n\n"{okay.text[:-12]}"\n\nFor progress please look at the console.')
-                    msg.exec_()
-                    with concurrent.futures.ThreadPoolExecutor() as executor:
-                        for x in range(int(pages)+1):
-                            if x > 0:
-                                url2 = f"https://i.hentaifox.com/{dir}/{id}/{x}.jpg"
-                                executor.submit(download, url2, x)
+                    msg = QtWidgets.QMessageBox
+                    # msg.setWindowTitle("Download")
+                    # msg.setText(f'About to start the download of\n\n"{okay.text[:-12]}"\n\nFor progress please look at the console.')
+                    reply = msg.question(self.tabs,"Download",f"Do you really want to download\n{okay.text[:-12]}?",msg.Ok|msg.Cancel)
+                    if reply == msg.Ok:
+                        os.mkdir(f"./{title}")
+                        with concurrent.futures.ThreadPoolExecutor() as executor:
+                            for x in range(int(pages)+1):
+                                if x > 0:
+                                    url2 = f"https://i.hentaifox.com/{dir}/{id}/{x}.jpg"
+                                    executor.submit(download, url2, x)
 
-                with ZipFile(f"Download/{title}.zip", "w") as zip:
-                    print("Zipping...")
-                    for file in os.listdir(f"./{title}/"):
-                        zip.write(f"{title}/{file}")
-                    print("Zipping done")
-                    shutil.rmtree(f'./{title}/')
-
-                msg = QtWidgets.QMessageBox()
-                msg.setWindowTitle("Download Finished")
-                msg.setText(f'You can find\n\n"{title}.zip"\n\nin the "Download" folder.' )
-                msg.exec_()
+                        with ZipFile(f"Download/{title}.zip", "w") as zip:
+                            print("Zipping...")
+                            for file in os.listdir(f"./{title}/"):
+                                zip.write(f"{title}/{file}")
+                            print("Zipping done")
+                            shutil.rmtree(f'./{title}/')
+                        msg = QtWidgets.QMessageBox(self.tabs)
+                        msg.setWindowTitle("Download Finished")
+                        msg.setText(f'You can find\n"{title}.zip"\nin the "Download" folder.' )
+                        msg.exec_()
 
         def add_bookmark(self):
-            with open("data/bookmarks.json","r") as f:
-                bookmarks = json.load(f)
+            bookmark_actions = []
+            for action in self.bookmarkMenu.actions():
+                if action.text().startswith("https://"):
+                    bookmark_actions.append(action.text())
             url = self.tabs.currentWidget().url().url()
-            if url not in bookmarks:
-                bookmarks.append(url)
-            with open("data/bookmarks.json","w") as f:
-                json.dump(bookmarks,f,indent=4)
-            self.refresh_bookmarks(mode="remove")
+            if url not in bookmark_actions:
+                with open("data/bookmarks.json","r") as f:
+                    bookmarks = json.load(f)
+                if url not in bookmarks:
+                    bookmarks.append(url)
+                with open("data/bookmarks.json","w") as f:
+                    json.dump(bookmarks,f,indent=4)
+                self.refresh_bookmarks(mode="remove")
 
         def remove_bookmark(self):
-            with open("data/bookmarks.json","r") as f:
-                bookmarks = json.load(f)
+            bookmark_actions = []
+            for action in self.bookmarkMenu.actions():
+                if action.text().startswith("https://"):
+                    bookmark_actions.append(action.text())
             url = self.tabs.currentWidget().url().url()
-            if url in bookmarks:
-                bookmarks.remove(url)
-            with open("data/bookmarks.json","w") as f:
-                json.dump(bookmarks,f,indent=4)
-            self.refresh_bookmarks(mode="add")
+            if url in bookmark_actions:
+                with open("data/bookmarks.json","r") as f:
+                    bookmarks = json.load(f)
+                if url in bookmarks:
+                    bookmarks.remove(url)
+                with open("data/bookmarks.json","w") as f:
+                    json.dump(bookmarks,f,indent=4)
+                self.refresh_bookmarks(mode="add")
 
         def refresh_bookmarks(self,mode=None):
             bookmark_actions = []
@@ -1040,20 +1097,31 @@ class Ui_HentaiFoxDesktop(QMainWindow):
                 elif url not in bookmark_actions:
                     mode = "add"
             if mode == "remove":
+                self.bookmark.setIcon(QIcon("icons/BookmarkSet.png"))
                 self.bookmarkMenu.clear()
-                self.bookmarkMenu.addAction(QIcon("icons/remove_Bookmark.png"),"Remove Bookmark",self.remove_bookmark)
+                self.bookmarkMenu.addAction(QIcon("icons/remove_Bookmark.png"),"Remove Bookmark",self.remove_bookmark,QKeySequence("Ctrl+D"))
                 self.bookmarkMenu.addSeparator()
                 for bookmark in bookmarks:
                     self.bookmarkMenu.addAction(f"{bookmark}",lambda bookmark=bookmark: self.load_bookmark(bookmark))
             elif mode == "add":
+                self.bookmark.setIcon(QIcon("icons/Bookmark.png"))
                 self.bookmarkMenu.clear()
-                self.bookmarkMenu.addAction(QIcon("icons/add_Bookmark.png"),"Add Bookmark",self.add_bookmark)
+                self.bookmarkMenu.addAction(QIcon("icons/add_Bookmark.png"),"Add Bookmark",self.add_bookmark,QKeySequence("Ctrl+D"))
                 self.bookmarkMenu.addSeparator()
                 for bookmark in bookmarks:
                     self.bookmarkMenu.addAction(f"{bookmark}",lambda bookmark=bookmark: self.load_bookmark(bookmark))
 
         def load_bookmark(self,bookmark):
             self.add_new_tab(qurl=QUrl(f"{bookmark}"),label="loading...")
+
+        def update_tab_count(self):
+            lenght = self.tabs.count()
+            self.tabsMenu.clear()
+            for x in range(lenght):
+                if x <= 8:
+                    i = x+1
+                    self.tabsMenu.addAction(f"Switch to Tab {i}",lambda x=x: self.tabs.setCurrentIndex(x),QKeySequence(f"Ctrl+{i}"))
+
 #---------multi-search-functions-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     if True:
 
@@ -1711,7 +1779,6 @@ class Ui_HentaiFoxDesktop(QMainWindow):
                         self.cover.setPixmap(QtGui.QPixmap("Icons/cover.jpg").scaled(QtCore.QSize(int((350/496)*height),int(height)),QtCore.Qt.KeepAspectRatio,QtCore.Qt.FastTransformation))
                     elif (width/height) <= (350/496):
                         self.cover.setPixmap(QtGui.QPixmap("Icons/cover.jpg").scaled(QtCore.QSize(int(width),int(width/(350/496))),QtCore.Qt.KeepAspectRatio,QtCore.Qt.FastTransformation))
-
 
         def opentaginbrowser2(self,type,abc):
             if type == "parodies":
