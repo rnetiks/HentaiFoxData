@@ -24,7 +24,7 @@ if True:
     latest_gallery = int(no1[no1.find("/gallery/")+9:no1.find('/"><img')])
 #---multi-search-list-setup-----
 if True:
-    with open("data.json","r")as f:
+    with open("data/data.json","r")as f:
         data = json.load(f)
     tag_galleries = {}
     white_list = {}
@@ -451,11 +451,14 @@ class Ui_HentaiFoxDesktop(QMainWindow):
             self.horizontalLayout_9 = QtWidgets.QHBoxLayout()
             self.horizontalLayout_9.setSpacing(10)
             self.horizontalLayout_9.setObjectName("horizontalLayout_9")
-            self.verticalLayout_18 = QtWidgets.QVBoxLayout()
-            self.verticalLayout_18.setObjectName("verticalLayout_18")
+            self.horizontalLayout_loadfile = QtWidgets.QHBoxLayout()
+            self.horizontalLayout_loadfile.setObjectName("verticalLayout_18")
             self.filebrowser = QtWidgets.QListWidget(self.results)
             self.filebrowser.setObjectName("filebrowser")
-            self.verticalLayout_18.addWidget(self.filebrowser)
+            self.horizontalLayout_loadfile.addWidget(self.filebrowser)
+            self.filebuttons_layout = QtWidgets.QVBoxLayout()
+            self.filebuttons_layout.setObjectName("filebuttons_layout")
+            self.horizontalLayout_loadfile.addLayout(self.filebuttons_layout)
             self.loadfilebutton = QtWidgets.QPushButton(self.results)
             sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Maximum)
             sizePolicy.setHorizontalStretch(0)
@@ -465,8 +468,18 @@ class Ui_HentaiFoxDesktop(QMainWindow):
             self.loadfilebutton.setMinimumSize(QtCore.QSize(0, 40))
             self.loadfilebutton.setFont(font11)
             self.loadfilebutton.setObjectName("loadfilebutton")
-            self.verticalLayout_18.addWidget(self.loadfilebutton)
-            self.horizontalLayout_9.addLayout(self.verticalLayout_18)
+            self.filebuttons_layout.addWidget(self.loadfilebutton)
+            self.deletefilebutton = QtWidgets.QPushButton(self.results)
+            sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Maximum)
+            sizePolicy.setHorizontalStretch(0)
+            sizePolicy.setVerticalStretch(0)
+            sizePolicy.setHeightForWidth(self.deletefilebutton.sizePolicy().hasHeightForWidth())
+            self.deletefilebutton.setSizePolicy(sizePolicy)
+            self.deletefilebutton.setMinimumSize(QtCore.QSize(0, 40))
+            self.deletefilebutton.setFont(font11)
+            self.deletefilebutton.setObjectName("deletefilebutton")
+            self.filebuttons_layout.addWidget(self.deletefilebutton)
+            self.horizontalLayout_9.addLayout(self.horizontalLayout_loadfile)
             self.line_3 = QtWidgets.QFrame(self.results)
             sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
             sizePolicy.setHorizontalStretch(0)
@@ -486,14 +499,14 @@ class Ui_HentaiFoxDesktop(QMainWindow):
             sizePolicy.setVerticalStretch(0)
             sizePolicy.setHeightForWidth(self.label_info.sizePolicy().hasHeightForWidth())
             self.label_info.setSizePolicy(sizePolicy)
-            self.label_info.setFont(font12)
+            self.label_info.setFont(font11)
             self.label_info.setAlignment(QtCore.Qt.AlignCenter)
             self.label_info.setWordWrap(True)
             self.label_info.setObjectName("label_info")
             self.horizontalLayout_9.addWidget(self.label_info)
-            self.horizontalLayout_9.setStretch(0, 105)
+            self.horizontalLayout_9.setStretch(0, 100)
             self.horizontalLayout_9.setStretch(1, 5)
-            self.horizontalLayout_9.setStretch(2, 300)
+            self.horizontalLayout_9.setStretch(2, 100)
             self.verticalLayout_19.addLayout(self.horizontalLayout_9)
             self.line_2 = QtWidgets.QFrame(self.results)
             self.line_2.setMinimumSize(QtCore.QSize(0, 6))
@@ -802,7 +815,6 @@ class Ui_HentaiFoxDesktop(QMainWindow):
             self.browserMenu.addSeparator()
             self.browserMenu.addAction(QIcon("icons/download.png"),"Download current Gallery",self.download,QKeySequence("Ctrl+S"))
             self.menu_button.setMenu(self.browserMenu)
-
 #---------multi-search-setup-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
         if True:
             self.choosetype.addItem("-- Choose Type --")
@@ -864,6 +876,7 @@ class Ui_HentaiFoxDesktop(QMainWindow):
             self.parodies.itemDoubleClicked.connect(self.parodies_opentaginbrowser)
             self.internalbrowserbutton.clicked.connect(self.opengalleryinternal)
             self.externalbrowserbutton.clicked.connect(self.opengalleryexternal)
+            self.deletefilebutton.clicked.connect(self.deletefile)
 #---------set-text---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     def retranslateUi(self, HentaiFoxDesktop):
         _translate = QtCore.QCoreApplication.translate
@@ -892,7 +905,8 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.search), _translate("HentaiFoxDesktop", "Multi-Search"))
         self.check_preview.setText(_translate("HentaiFoxDesktop", "Disable Preview (less interactions with the website)"))
         self.loadfilebutton.setText(_translate("HentaiFoxDesktop", "Load selected .result file"))
-        self.label_info.setText(_translate("HentaiFoxDesktop", "<html><head/><body><p>The filetype &quot;.result&quot; is a custom json file containing the results of a Multi-search.</p><p>You can add external .result files by dropping them in the &quot;Results (JSON)&quot; folder. </p><p>You can also find a txt-file containing just the URLs in the &quot;Results (TXT)&quot; folder.</p></body></html>"))
+        self.deletefilebutton.setText(_translate("HentaiFoxDesktop", "Delete the selected .result file"))
+        self.label_info.setText(_translate("HentaiFoxDesktop", "<html><head/><body><p>The Filename is constructed by the white- and blacklisted tags. First the whitelisted tags combined with a &quot;-&quot;, second the blacklisted tags added with a &quot;!&quot;.</p><p>The filetype &quot;.result&quot; is a custom json file containing the results of a Multi-search.</p><p>You can add external .result files by dropping them in the &quot;Results (JSON)&quot; folder. </p><p>You can also find a txt-file containing just the URLs in the &quot;Results (TXT)&quot; folder.</p><p>The delete button will delete both the .result file and the corresponding .txt file.</p></body></html>"))
         self.title.setText(_translate("HentaiFoxDesktop", "Title"))
         self.lable_tags.setText(_translate("HentaiFoxDesktop", "Tags:"))
         self.lable_artistandgroups.setText(_translate("HentaiFoxDesktop", "Artist and Groups:"))
@@ -1121,7 +1135,6 @@ class Ui_HentaiFoxDesktop(QMainWindow):
                 if x <= 8:
                     i = x+1
                     self.tabsMenu.addAction(f"Switch to Tab {i}",lambda x=x: self.tabs.setCurrentIndex(x),QKeySequence(f"Ctrl+{i}"))
-
 #---------multi-search-functions-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     if True:
 
@@ -1195,10 +1208,17 @@ class Ui_HentaiFoxDesktop(QMainWindow):
                     self.percentagecount.setValue(int(percentage*100))
                 except:
                     pass
-                with open("descriptions.json","r") as d:
-                    desps = json.load(d)
-                    description = desps[type][abc]
-                    self.describtion.setText(description)
+                with open("data/descriptions.json","r") as d:
+                    with open("data/wikientries.json","r") as b:
+                        desps = json.load(d)
+                        wdes = json.load(b)
+                        description = desps[type][abc]
+                        if type == "tags":
+                            wdescription = wdes["tags"][abc]
+                            text = f"Wikidescription (by ehwiki.org):\n{wdescription}\n\nUserdescriptions:\n{description}"
+                        else:
+                            text = f"{describtion}"
+                        self.describtion.setText(text)
 
         def criterialist_update_gallerycounter(self):
             current_abc = self.criterialist.currentItem().text()
@@ -1649,6 +1669,26 @@ class Ui_HentaiFoxDesktop(QMainWindow):
                     for gal in gaps:
                         content = f.read()
                         f.write(f"{content}\n{gal}")
+
+                things = {}
+
+                types = ["parodies","characters","tags","artists","groups","categories"]
+                for type in types:
+                    things[type] = {}
+                    for file in os.listdir(f"./{type}/"):
+                        abc = str(file)[:-5]
+                        try:
+                            with open(f"{type}/{abc}.json","r") as g:
+                                gals = json.load(g)
+                            things[type][abc] = len(gals["galleries"])
+                            print(f"Counting galleries: {type}/{abc}.json")
+                        except:
+                            print(f"ERROR: {type}/{abc}.json is broken. The created file is not usable.")
+                            break
+
+                with open("data/data.json","w") as f:
+                    json.dump(things,f,indent=4)
+                print("--- datamap update finished ---")
                 msg = QtWidgets.QMessageBox()
                 msg.setWindowTitle("Finished")
                 msg.setText(f"Datamap up to date.\nWrote URLs of gaps into 404.txt\n")
@@ -1762,7 +1802,7 @@ class Ui_HentaiFoxDesktop(QMainWindow):
                             except:
                                 split_tag = ''
                             cat = cat_raw.text[:-len(cat_raw.find("span", attrs={"class":"t_badge"}).text)][:-1].replace(split_tag,'')
-                            category_text = category_text + f"[{cat}]"
+                            category_text = category_text + f"Category: [{cat}]"
                         self.category.setText(category_text)
 
                     image_raw = str(soup.find("div", attrs={'class':"cover"}))
@@ -1828,6 +1868,13 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         def opengalleryexternal(self):
             url = self.resultlist.currentItem().text()
             os.system(f"start {url}")
+
+        def deletefile(self):
+            if self.filebrowser.currentItem() != None:
+                result_file = self.filebrowser.currentItem().text()
+                os.remove(f"Results (JSON)/{result_file}")
+                os.remove(f"Results (TXT)/{result_file[:-7]}.txt")
+                self.load_result_filelist()
 
 class WebEngineView(QWebEngineView):
     def __init__(self, *args, **kwargs):
