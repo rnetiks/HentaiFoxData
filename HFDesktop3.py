@@ -1023,12 +1023,21 @@ class Ui_HentaiFoxDesktop(QMainWindow):
                 gal = okay[okay.find('href="')+6:okay.find('">Back')]
                 url = f"https://hentaifox.com{gal}"
             if url[:30] == "https://hentaifox.com/gallery/":
+
                 def download(url2,x):
                     resource = requests.get(url2)
-                    output = open(f"{title}\{x}.jpg","wb")
-                    output.write(resource.content)
-                    output.close()
-                    print(f"{x} done")
+                    if str(resource) == "<Response [200]>":
+                        output = open(f"{title}\{x}.jpg","wb")
+                        output.write(resource.content)
+                        output.close()
+                        print(f"{x} done")
+                    else:
+                        url2 = url2[:-3] + "png"
+                        resource2 = requests.get(url2)
+                        output = open(f"{title}\{x}.png","wb")
+                        output.write(resource2.content)
+                        output.close()
+                        print(f"{x} done")
 
                 web = requests.get(f"{url}")
                 html = web.text
@@ -1042,11 +1051,13 @@ class Ui_HentaiFoxDesktop(QMainWindow):
                     id = show_all_id_raw[show_all_id_raw.find('value="')+7:-3]
                     pages = show_all_pages_raw[show_all_pages_raw.find('value="')+7:-3]
                     msg = QtWidgets.QMessageBox
-                    # msg.setWindowTitle("Download")
-                    # msg.setText(f'About to start the download of\n\n"{okay.text[:-12]}"\n\nFor progress please look at the console.')
                     reply = msg.question(self.tabs,"Download",f"Do you really want to download\n{okay.text[:-12]}?",msg.Ok|msg.Cancel)
                     if reply == msg.Ok:
-                        os.mkdir(f"./{title}")
+                        try:
+                            os.mkdir(f"./{title}")
+                        except FileExistsError:
+                            print("Warning: Folder already exists")
+                            pass
                         with concurrent.futures.ThreadPoolExecutor() as executor:
                             for x in range(int(pages)+1):
                                 if x > 0:
