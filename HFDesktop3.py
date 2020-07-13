@@ -1217,19 +1217,19 @@ class Ui_HentaiFoxDesktop(QMainWindow):
                     self.pagecount.display(count)
                     percentage = int(count)/int(latest_gallery)
                     self.percentagecount.setValue(int(percentage*100))
+                    with open("data/descriptions.json","r") as d:
+                        with open("data/wikientries.json","r") as b:
+                            desps = json.load(d)
+                            wdes = json.load(b)
+                            description = desps[type][abc]
+                            if type == "tags":
+                                wdescription = wdes["tags"][abc]
+                                text = f"Wikidescription (by ehwiki.org):\n{wdescription}\n\nUserdescriptions:\n{description}"
+                            else:
+                                text = f"{description}"
+                            self.describtion.setText(text)
                 except:
-                    pass
-                with open("data/descriptions.json","r") as d:
-                    with open("data/wikientries.json","r") as b:
-                        desps = json.load(d)
-                        wdes = json.load(b)
-                        description = desps[type][abc]
-                        if type == "tags":
-                            wdescription = wdes["tags"][abc]
-                            text = f"Wikidescription (by ehwiki.org):\n{wdescription}\n\nUserdescriptions:\n{description}"
-                        else:
-                            text = f"{description}"
-                        self.describtion.setText(text)
+                    print("Error while loading the description or gallery-counter")
 
         def criterialist_update_gallerycounter(self):
             current_abc = self.criterialist.currentItem().text()
