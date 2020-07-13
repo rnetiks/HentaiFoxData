@@ -1217,7 +1217,7 @@ class Ui_HentaiFoxDesktop(QMainWindow):
                             wdescription = wdes["tags"][abc]
                             text = f"Wikidescription (by ehwiki.org):\n{wdescription}\n\nUserdescriptions:\n{description}"
                         else:
-                            text = f"{describtion}"
+                            text = f"{description}"
                         self.describtion.setText(text)
 
         def criterialist_update_gallerycounter(self):
