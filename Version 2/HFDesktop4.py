@@ -586,6 +586,26 @@ class Ui_HentaiFoxDesktop(QMainWindow):
             self.deletefilebutton.setFont(font11)
             self.deletefilebutton.setObjectName("deletefilebutton")
             self.filebuttons_layout.addWidget(self.deletefilebutton)
+            self.openjson_button = QtWidgets.QPushButton(self.results)
+            sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Maximum)
+            sizePolicy.setHorizontalStretch(0)
+            sizePolicy.setVerticalStretch(0)
+            sizePolicy.setHeightForWidth(self.openjson_button.sizePolicy().hasHeightForWidth())
+            self.openjson_button.setSizePolicy(sizePolicy)
+            self.openjson_button.setMinimumSize(QtCore.QSize(0, 40))
+            self.openjson_button.setFont(font11)
+            self.openjson_button.setObjectName("openjson_button")
+            self.filebuttons_layout.addWidget(self.openjson_button)
+            self.opentxt_button = QtWidgets.QPushButton(self.results)
+            sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Maximum)
+            sizePolicy.setHorizontalStretch(0)
+            sizePolicy.setVerticalStretch(0)
+            sizePolicy.setHeightForWidth(self.opentxt_button.sizePolicy().hasHeightForWidth())
+            self.opentxt_button.setSizePolicy(sizePolicy)
+            self.opentxt_button.setMinimumSize(QtCore.QSize(0, 40))
+            self.opentxt_button.setFont(font11)
+            self.opentxt_button.setObjectName("opentxt_button")
+            self.filebuttons_layout.addWidget(self.opentxt_button)
             self.horizontalLayout_9.addLayout(self.horizontalLayout_loadfile)
             self.line_3 = QtWidgets.QFrame(self.results)
             sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
@@ -1005,10 +1025,13 @@ class Ui_HentaiFoxDesktop(QMainWindow):
             self.SortR_DESC.clicked.connect(self.R_DESC_toggled)
             self.choosedisplaytype.currentTextChanged.connect(self.display_results)
             self.resultlist.itemDoubleClicked.connect(self.copy_result_to_clipboard)
+            self.opentxt_button.clicked.connect(self.open_txt_folder)
+            self.openjson_button.clicked.connect(self.open_json_folder)
 #---------set-text---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     def retranslateUi(self, HentaiFoxDesktop):
         _translate = QtCore.QCoreApplication.translate
         HentaiFoxDesktop.setWindowTitle(_translate("HentaiFoxDesktop", "HentaiFox Desktop"))
+        self.label_version.setText(_translate("HentaiFoxDesktop", "<html><head/><body><p>HF-Desktop v.2.1</p></body></html>"))
         self.downloadbutton.setText(_translate("HentaiFoxDesktop", "Download Gallery"))
         self.label_zoom.setText(_translate("HentaiFoxDesktop", "Zoom:"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.browse), _translate("HentaiFoxDesktop", "Browse"))
@@ -1033,7 +1056,7 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.search), _translate("HentaiFoxDesktop", "Multi-Search"))
         self.check_preview.setText(_translate("HentaiFoxDesktop", "Disable Cover (No sever interactions)"))
         self.loadfilebutton.setText(_translate("HentaiFoxDesktop", "Load selected .result file"))
-        self.deletefilebutton.setText(_translate("HentaiFoxDesktop", "Delete the selected .result file"))
+        self.deletefilebutton.setText(_translate("HentaiFoxDesktop", "Delete selected .result file"))
         self.label_info.setText(_translate("HentaiFoxDesktop", "<html><head/><body><p>The Filename is constructed by the white- and blacklisted tags. First the whitelisted tags combined with a &quot;-&quot;, second the blacklisted tags added with a &quot;!&quot;.</p><p>The filetype &quot;.result&quot; is a custom json file containing the results of a Multi-search.</p><p>You can add external .result files by dropping them in the &quot;Results (JSON)&quot; folder. </p><p>You can also find a txt-file containing just the URLs in the &quot;Results (TXT)&quot; folder.</p><p>The delete button will delete both the .result file and the corresponding .txt file.</p></body></html>"))
         self.title.setText(_translate("HentaiFoxDesktop", "Title"))
         self.lable_tags.setText(_translate("HentaiFoxDesktop", "Tags:"))
@@ -1052,7 +1075,6 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         self.start.setText(_translate("HentaiFoxDesktop", "Start searching for gaps and updates at: 1"))
         self.stop.setText(_translate("HentaiFoxDesktop", "Stop searching for gaps and updates at: 1"))
         self.updatebutton.setText(_translate("HentaiFoxDesktop", "Update"))
-        self.label_version.setText(_translate("HentaiFoxDesktop", "<html><head/><body><p>HF-Desktop v.2.0</p></body></html>"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.update), _translate("HentaiFoxDesktop", "Update-Datamap"))
         self.Sort_ASC.setText("Ascending")
         self.Sort_DESC.setText("Descending")
@@ -1063,6 +1085,8 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         self.SortR_PAGES.setText("by Pages")
         self.SortR_ASC.setText("Ascending")
         self.SortR_DESC.setText("Descending")
+        self.openjson_button.setText('Open "Results (JSON)"')
+        self.opentxt_button.setText('Open "Results (TXT)"')
 #---------browser-functions------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     if True:
         def add_new_tab(self, qurl=None, label="Loading..."):
@@ -1426,11 +1450,14 @@ class Ui_HentaiFoxDesktop(QMainWindow):
 
                 for type,list_ in black_list.items():
                     if len(list_) > 0:
-                        string = f"SELECT DISTINCT gal FROM galleryinformation WHERE true "
+                        string = f"SELECT DISTINCT gal FROM galleryinformation WHERE true"
                         for type,list_ in black_list.items():
                             if len(list_) > 0:
+                                connection = " AND "
                                 for tag in black_list[type]:
-                                    string = string + f"AND gal IN (SELECT gal FROM gallery{type} WHERE tag='{tag}') "
+                                    string = string + connection +f"gal IN (SELECT gal FROM gallery{type} WHERE tag='{tag}')"
+                                    connection = " OR "
+                        print(string)
                         c.execute(f"{string}")
                         result = c.fetchall()
                         for tu in result:
@@ -1494,7 +1521,7 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         def update_start(self):
             self.start.setText(f"Start searching for gaps and updates at: {self.startslider.value()}")
         def update_stop(self):
-            self.stop.setText(f"Stop searching for gaps and updates at: {self.stopslider.value()}")f
+            self.stop.setText(f"Stop searching for gaps and updates at: {self.stopslider.value()}")
 
         def update_datamap(self):
             if self.stopslider.value() > self.startslider.value():
@@ -1961,6 +1988,14 @@ class Ui_HentaiFoxDesktop(QMainWindow):
             if self.choosedisplaytype.currentText() == "TITLE":
                 id = self.resultlist.currentItem().toolTip()
             pyperclip.copy(f"https://hentaifox.com/gallery/{id}")
+
+        def open_json_folder(self):
+            path = os.path.abspath("./Results (JSON)/")
+            os.system(f'explorer {path}')
+
+        def open_txt_folder(self):
+            path = os.path.abspath("./Results (TXT)/")
+            os.system(f'explorer {path}')
 
 class WebEngineView(QWebEngineView):
     def __init__(self, *args, **kwargs):
