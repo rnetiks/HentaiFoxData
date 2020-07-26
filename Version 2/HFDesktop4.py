@@ -1922,6 +1922,7 @@ class Ui_HentaiFoxDesktop(QMainWindow):
             self.display_results()
 
         def opentaginbrowser2(self,type,abc):
+            print(type)
             type = type_converter(type)
             abc = abc.replace(" ", "-")#.replace(".","")
             if abc.endswith("-"):
@@ -1951,10 +1952,7 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         def artistsandgroups_opentaginbrowser(self):
             current_abc = self.artistsandgroups.currentItem().text()[:self.artistsandgroups.currentItem().text().find(" (")]
             current_type = self.artistsandgroups.currentItem().text()[self.artistsandgroups.currentItem().text().find("(")+1:self.artistsandgroups.currentItem().text().find(")")]
-            if current_type == "Group":
-                current_type = "groups"
-            if current_type == "Artist":
-                current_type = "artists"
+            current_type = current_type + "s"
             self.opentaginbrowser2(abc=current_abc,type=current_type)
 
         def opengalleryinternal(self):
