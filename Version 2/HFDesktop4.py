@@ -1206,7 +1206,7 @@ class Ui_HentaiFoxDesktop(QMainWindow):
                 okay = soup.find('title')
                 title = str(okay.text).replace("|","_").replace(".","")
                 if str(okay) != "<title>404 Not Found - HentaiFox</title>":
-                    dir = str(html)[str(html).find('input type="hidden" name="load_dir" id="load_dir"')+57:str(html).find('input type="hidden" name="load_dir" id="load_dir"')+60]
+                    dir = str(html)[str(html).find('input type="hidden" name="load_dir" id="load_dir"')+57:str(html).find('input type="hidden" name="load_id" id="load_id"')-5]
                     show_all_id_raw = str(soup.find("input", attrs={"type":"hidden","name":"load_id","id":"load_id"}))
                     show_all_pages_raw = str(soup.find("input", attrs={"type":"hidden","name":"load_pages","id":"load_pages"}))
                     id = show_all_id_raw[show_all_id_raw.find('value="')+7:-3]
@@ -1223,6 +1223,7 @@ class Ui_HentaiFoxDesktop(QMainWindow):
                             for x in range(int(pages)+1):
                                 if x > 0:
                                     url2 = f"https://i.hentaifox.com/{dir}/{id}/{x}.jpg"
+                                    print(url2)
                                     executor.submit(download, url2, x)
 
                         with ZipFile(f"Download/{title}.zip", "w") as zip:
