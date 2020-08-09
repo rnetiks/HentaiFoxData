@@ -27,6 +27,9 @@ if True:
     black_list = {}
     item_list = {}
     result_view_list = []
+
+    tag_info_setting = 0
+
 #---Define-Converter------------
 def type_converter(type):
     if type == "parodies":
@@ -63,6 +66,19 @@ if True:
 class Ui_HentaiFoxDesktop(QMainWindow):
     def setupUi(self, HentaiFoxDesktop):
         if True:
+            font10 = QtGui.QFont()
+            font10.setFamily("Arial")
+            font10.setPointSize(10)
+            font11 = QtGui.QFont()
+            font11.setPointSize(11)
+            font12 = QtGui.QFont()
+            font12.setPointSize(12)
+            font13 = QtGui.QFont()
+            font13.setPointSize(13)
+            font14 = QtGui.QFont()
+            font14.setFamily("Arial")
+            font14.setPointSize(14)
+            font14.setWeight(50)
             HentaiFoxDesktop.setObjectName("HentaiFoxDesktop")
             HentaiFoxDesktop.resize(1920, 1000)
             self.status = QStatusBar()
@@ -84,10 +100,6 @@ class Ui_HentaiFoxDesktop(QMainWindow):
             self.horizontalLayout.setSpacing(5)
             self.horizontalLayout.setObjectName("horizontalLayout")
             self.backbutton = QtWidgets.QPushButton(self.browse)
-            font14 = QtGui.QFont()
-            font14.setFamily("Arial")
-            font14.setPointSize(14)
-            font14.setWeight(50)
             self.backbutton.setFont(font14)
             icon = QtGui.QIcon()
             icon.addPixmap(QtGui.QPixmap(".\\Icons/Back_Arrow.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -134,9 +146,6 @@ class Ui_HentaiFoxDesktop(QMainWindow):
             sizePolicy.setVerticalStretch(0)
             sizePolicy.setHeightForWidth(self.urlbar.sizePolicy().hasHeightForWidth())
             self.urlbar.setSizePolicy(sizePolicy)
-            font10 = QtGui.QFont()
-            font10.setFamily("Arial")
-            font10.setPointSize(10)
             self.urlbar.setFont(font10)
             self.urlbar.setObjectName("urlbar")
             self.horizontalLayout.addWidget(self.urlbar)
@@ -151,14 +160,10 @@ class Ui_HentaiFoxDesktop(QMainWindow):
             self.bookmark.setObjectName("toolButton")
             self.horizontalLayout.addWidget(self.bookmark)
             self.downloadbutton = QtWidgets.QPushButton(self.browse)
-            font11 = QtGui.QFont()
-            font11.setPointSize(11)
             self.downloadbutton.setFont(font11)
             self.downloadbutton.setObjectName("downloadbutton")
             self.horizontalLayout.addWidget(self.downloadbutton)
             self.label_zoom = QtWidgets.QLabel(self.browse)
-            font13 = QtGui.QFont()
-            font13.setPointSize(13)
             self.label_zoom.setFont(font13)
             self.label_zoom.setObjectName("label_zoom")
             self.horizontalLayout.addWidget(self.label_zoom)
@@ -201,6 +206,20 @@ class Ui_HentaiFoxDesktop(QMainWindow):
             self.verticalLayout_21 = QtWidgets.QVBoxLayout(self.tab)
             self.verticalLayout_21.setObjectName("verticalLayout_21")
             self.verticalLayout.addWidget(self.tabs)
+
+            self.hover_url = QLabel(self.browse)
+            self.hover_url.setStyleSheet("background-color: white")
+            self.hover_url.setFont(font11)
+            self.hover_url.hide()
+
+            self.tag_info_overlay = QLabel(self.browse)
+            self.tag_info_overlay.setStyleSheet("background-color: white")
+            self.tag_info_overlay.setFont(font13)
+            self.tag_info_overlay.setAlignment(Qt.AlignCenter)
+            self.tag_info_overlay.setFrameShape(QFrame.StyledPanel)
+            self.tag_info_overlay.setLineWidth(2)
+            self.tag_info_overlay.hide()
+
             self.gridLayout_2.addLayout(self.verticalLayout, 0, 0, 1, 1)
             self.tabWidget.addTab(self.browse, "")
             self.search = QtWidgets.QWidget()
@@ -288,8 +307,6 @@ class Ui_HentaiFoxDesktop(QMainWindow):
             sizePolicy.setVerticalStretch(0)
             sizePolicy.setHeightForWidth(self.whitelist_arrows_r.sizePolicy().hasHeightForWidth())
             self.whitelist_arrows_r.setSizePolicy(sizePolicy)
-            font12 = QtGui.QFont()
-            font12.setPointSize(12)
             self.whitelist_arrows_r.setFont(font12)
             self.whitelist_arrows_r.setAlignment(QtCore.Qt.AlignCenter)
             self.whitelist_arrows_r.setObjectName("whitelist_arrows_r")
@@ -692,9 +709,9 @@ class Ui_HentaiFoxDesktop(QMainWindow):
             self.gridLayout_4.addLayout(self.verticalLayout_17, 2, 3, 1, 2)
             self.verticalLayout_13 = QtWidgets.QVBoxLayout()
             self.verticalLayout_13.setObjectName("verticalLayout_13")
-            self.label_choose_doubleclickfunc2 = QtWidgets.QLabel(self.results)
             font = QtGui.QFont()
             font.setPointSize(10)
+            self.label_choose_doubleclickfunc2 = QtWidgets.QLabel(self.results)
             self.label_choose_doubleclickfunc2.setFont(font)
             self.label_choose_doubleclickfunc2.setFrameShape(QtWidgets.QFrame.NoFrame)
             self.label_choose_doubleclickfunc2.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
@@ -927,24 +944,8 @@ class Ui_HentaiFoxDesktop(QMainWindow):
                 self.bookmarkMenu.addAction(f"{tu[1]}",lambda bookmark_url=tu[0]: self.load_bookmark(bookmark_url))
             self.refresh_bookmarks()
             self.bookmark.setMenu(self.bookmarkMenu)
-
             self.browserMenu = QMenu()
-            self.browserMenu.addAction(QIcon("icons/Back_Arrow.png"),"Back",lambda: self.tabs.currentWidget().back(),QKeySequence("Ctrl+Left"))
-            self.browserMenu.addAction(QIcon("icons/Forward_Arrow.png"),"Forward",lambda: self.tabs.currentWidget().forward(),QKeySequence("Ctrl+Right"))
-            self.browserMenu.addAction(QIcon("icons/Reload_Arrow.png"),"Reload",lambda: self.tabs.currentWidget().reload(),QKeySequence("Ctrl+R"))
-            self.browserMenu.addAction(QIcon("icons/Home-icon.png"),"Home",self.navigate_home,QKeySequence("Ctrl+H"))
-            self.browserMenu.addSeparator()
-            self.browserMenu.addAction(QIcon("icons/add_tab.png"),"New Tab",self.add_new_tab,QKeySequence("Ctrl+T"))
-            self.browserMenu.addAction(QIcon("icons/remove_tab.png"),"Close Tab",lambda i=self.tabs.currentIndex(): self.close_current_tab(i),QKeySequence("Ctrl+W"))
-            self.tabsMenu = self.browserMenu.addMenu(QIcon("icons/tab.png"),"Navigate Tabs")
-            self.tabsMenu.addAction("Switch to Tab 1",lambda: self.tabs.setCurrentIndex(0),QKeySequence("Ctrl+1"))
-            self.browserMenu.addSeparator()
-            self.browserMenu.addAction(QIcon("icons/zoom_in.png"),"Zoom in by 10%",lambda value=0.1:self.zoom_browser2(value=value),QKeySequence("Ctrl++"))
-            self.browserMenu.addAction(QIcon("icons/zoom_out.png"),"Zoom out by 10%",lambda value=-0.1:self.zoom_browser2(value=value),QKeySequence("Ctrl+-"))
-            self.browserMenu.addAction(QIcon("icons/zoom.png"),"Reset Zoom to 100%",self.reset_zoom,QKeySequence("Ctrl+0"))
-            self.browserMenu.addSeparator()
-            self.browserMenu.addAction(QIcon("icons/download.png"),"Download current Gallery",self.download,QKeySequence("Ctrl+S"))
-            self.menu_button.setMenu(self.browserMenu)
+            self.create_menu()
 #---------multi-search-setup-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
         if True:
             create_itemlist("tag","ASC")
@@ -1031,7 +1032,7 @@ class Ui_HentaiFoxDesktop(QMainWindow):
     def retranslateUi(self, HentaiFoxDesktop):
         _translate = QtCore.QCoreApplication.translate
         HentaiFoxDesktop.setWindowTitle(_translate("HentaiFoxDesktop", "HentaiFox Desktop"))
-        self.label_version.setText(_translate("HentaiFoxDesktop", "<html><head/><body><p>HF-Desktop v.2.1</p></body></html>"))
+        self.label_version.setText(_translate("HentaiFoxDesktop", "<html><head/><body><p>HF-Desktop v.2.2</p></body></html>"))
         self.downloadbutton.setText(_translate("HentaiFoxDesktop", "Download Gallery"))
         self.label_zoom.setText(_translate("HentaiFoxDesktop", "Zoom:"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.browse), _translate("HentaiFoxDesktop", "Browse"))
@@ -1098,11 +1099,15 @@ class Ui_HentaiFoxDesktop(QMainWindow):
             self.tabs.setCurrentIndex(i)
             browser.urlChanged.connect(lambda qurl, browser=browser: self.update_urlbar(qurl, browser))
             browser.loadFinished.connect(lambda _, i=i, browser=browser: self.tabs.setTabText(i, browser.page().title()))
+            browser.page().linkHovered.connect(lambda url=browser.page().linkHovered: self.link_hovered(url))
 
         def create_new_tab(self, page):
             browser = page
             i = self.tabs.addTab(browser, "loading...")
-            self.tabs.setCurrentIndex(i)
+            c.execute("SELECT value FROM settings WHERE setting='switch_tabs_setting'")
+            switch_tabs_setting = int(c.fetchone()[0])
+            if switch_tabs_setting == 1:
+                self.tabs.setCurrentIndex(i)
             browser.urlChanged.connect(lambda qurl, browser=browser: self.update_urlbar(qurl, browser))
             browser.loadFinished.connect(lambda _, i=i, browser=browser: self.tabs.setTabText(i, browser.page().title()))
 
@@ -1204,7 +1209,7 @@ class Ui_HentaiFoxDesktop(QMainWindow):
                 html = web.text
                 soup = BeautifulSoup(html, 'html.parser')
                 okay = soup.find('title')
-                title = str(okay.text).replace("|","_").replace(".","")
+                title = str(okay.text).replace("|","_").replace(".","").replace(":","-")
                 if str(okay) != "<title>404 Not Found - HentaiFox</title>":
                     dir = str(html)[str(html).find('input type="hidden" name="load_dir" id="load_dir"')+57:str(html).find('input type="hidden" name="load_id" id="load_id"')-5]
                     show_all_id_raw = str(soup.find("input", attrs={"type":"hidden","name":"load_id","id":"load_id"}))
@@ -1292,9 +1297,111 @@ class Ui_HentaiFoxDesktop(QMainWindow):
                 if x <= 8:
                     i = x+1
                     self.tabsMenu.addAction(f"Switch to Tab {i}",lambda x=x: self.tabs.setCurrentIndex(x),QKeySequence(f"Ctrl+{i}"))
+
+        def copy_url(self):
+            url = self.tabs.currentWidget().url().url()
+            pyperclip.copy(url)
+
+        def link_hovered(self,url):
+            if len(url) > 150:
+                url = url[:100]+"..."
+            if url != "":
+                p = self.browse.geometry().bottomLeft() + QPoint(12,-33)
+                self.hover_url.move(p)
+                self.hover_url.raise_()
+                self.hover_url.setText(url)
+                self.hover_url.adjustSize()
+                self.hover_url.show()
+            else:
+                self.hover_url.hide()
+                self.tag_info_overlay.hide()
+
+            c.execute("SELECT value FROM settings WHERE setting='tag_info_setting'")
+            tag_info_setting = c.fetchone()[0]
+            if tag_info_setting == 1:
+                if url.startswith("https://hentaifox.com/tag/"):
+                    c.execute(f"SELECT * FROM taginformation WHERE url='{url}'")
+                    tu = c.fetchone()
+                    if tu != None:
+                        tag = tu[0]
+                        galleries = tu[1]
+                        wiki_description = tu[2]
+                        if len(wiki_description) > 180:
+                            positions = ( [pos for pos, char in enumerate(wiki_description) if char == " "])
+                            postition = min(positions, key=lambda x:abs(x-170))
+                            print(postition)
+                            wiki_description = f"{wiki_description[:postition]}\n{wiki_description[postition:]}"
+
+
+                        info = f"{tag}:\n{wiki_description}\nReal amount of Galleries: {galleries}"
+                    else:
+                        info = "Currently Unavalible"
+
+                    self.tag_info_overlay.raise_()
+                    self.tag_info_overlay.setText(info)
+                    self.tag_info_overlay.adjustSize()
+                    p = self.tabs.geometry().bottomRight() - QPoint(int(self.tabs.geometry().width()/2+(self.tag_info_overlay.geometry().width()/2)),int(self.tag_info_overlay.geometry().height()+30))
+                    self.tag_info_overlay.move(p)
+                    self.tag_info_overlay.show()
+
+        def deactivate_taginformation(self):
+            c.execute("UPDATE settings SET value = '0' WHERE setting ='tag_info_setting'")
+            conn.commit()
+            self.create_menu()
+
+        def activate_taginformation(self):
+            c.execute("UPDATE settings SET value = '1' WHERE setting = 'tag_info_setting'")
+            conn.commit()
+            self.create_menu()
+
+        def deactivate_tabswitching(self):
+            c.execute("UPDATE settings SET value = '0' WHERE setting ='switch_tabs_setting'")
+            conn.commit()
+            self.create_menu()
+
+        def activate_tabswitching(self):
+            c.execute("UPDATE settings SET value = '1' WHERE setting = 'switch_tabs_setting'")
+            conn.commit()
+            self.create_menu()
+
+        def create_menu(self):
+            c.execute("SELECT value FROM settings WHERE setting='tag_info_setting'")
+            tag_info_setting = int(c.fetchone()[0])
+            c.execute("SELECT value FROM settings WHERE setting='switch_tabs_setting'")
+            switch_tabs_setting = int(c.fetchone()[0])
+
+            self.browserMenu.clear()
+            self.browserMenu.addAction(QIcon("icons/Back_Arrow.png"),"Back",lambda: self.tabs.currentWidget().back(),QKeySequence("Ctrl+Left"))
+            self.browserMenu.addAction(QIcon("icons/Forward_Arrow.png"),"Forward",lambda: self.tabs.currentWidget().forward(),QKeySequence("Ctrl+Right"))
+            self.browserMenu.addAction(QIcon("icons/Reload_Arrow.png"),"Reload",lambda: self.tabs.currentWidget().reload(),QKeySequence("Ctrl+R"))
+            self.browserMenu.addAction(QIcon("icons/Home-icon.png"),"Home",self.navigate_home,QKeySequence("Ctrl+H"))
+            self.browserMenu.addSeparator()
+            self.browserMenu.addAction(QIcon("icons/add_tab.png"),"New Tab",self.add_new_tab,QKeySequence("Ctrl+T"))
+            self.browserMenu.addAction(QIcon("icons/remove_tab.png"),"Close Tab",lambda i=self.tabs.currentIndex(): self.close_current_tab(i),QKeySequence("Ctrl+W"))
+            self.tabsMenu = self.browserMenu.addMenu(QIcon("icons/tab.png"),"Navigate Tabs")
+            self.tabsMenu.addAction("Switch to Tab 1",lambda: self.tabs.setCurrentIndex(0),QKeySequence("Ctrl+1"))
+            self.browserMenu.addSeparator()
+            self.browserMenu.addAction(QIcon("icons/zoom_in.png"),"Zoom in by 10%",lambda value=0.1:self.zoom_browser2(value=value),QKeySequence("Ctrl++"))
+            self.browserMenu.addAction(QIcon("icons/zoom_out.png"),"Zoom out by 10%",lambda value=-0.1:self.zoom_browser2(value=value),QKeySequence("Ctrl+-"))
+            self.browserMenu.addAction(QIcon("icons/zoom.png"),"Reset Zoom to 100%",self.reset_zoom,QKeySequence("Ctrl+0"))
+            self.browserMenu.addSeparator()
+            self.browserMenu.addAction(QIcon("icons/download.png"),"Download current Gallery",self.download,QKeySequence("Ctrl+S"))
+            self.browserMenu.addAction(QIcon("icons/copy.png"),"Copy page URL to clipboard",self.copy_url,QKeySequence("Ctrl+Shift+C"))
+            self.browserMenu.addSeparator()
+            self.settingsMenu = self.browserMenu.addMenu(QIcon("icons/setting_icon.png"),"Settings")
+
+            if tag_info_setting == 0:
+                self.settingsMenu.addAction(QIcon("icons/checkbox_empty.png"),"Display Taginformation on hover", self.activate_taginformation)
+            elif tag_info_setting == 1:
+                self.settingsMenu.addAction(QIcon("icons/checkbox_checked.png"),"Display Taginformation on hover", self.deactivate_taginformation)
+
+            if switch_tabs_setting == 0:
+                self.settingsMenu.addAction(QIcon("icons/checkbox_empty.png"),"Autoswitch to new Tab when opening", self.activate_tabswitching)
+            if switch_tabs_setting == 1:
+                self.settingsMenu.addAction(QIcon("icons/checkbox_checked.png"),"Autoswitch to new Tab when opening", self.deactivate_tabswitching)
+            self.menu_button.setMenu(self.browserMenu)
 #---------multi-search-functions-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     if True:
-
         def update_taglist(self):
             self.criterialist.clear()
             if self.choosetype.currentText() == "tags":
@@ -1494,6 +1601,20 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         def external_toggled(self):
             self.check_internal.setChecked(False)
 
+        def reorder_itemlist(self,feature,up_down):
+            for type in types:
+                typex = type_converter(type)
+                item_list[type] = []
+                c.execute(f"SELECT DISTINCT tag FROM {typex}information WHERE true ORDER BY {feature} {up_down}")
+                for tu in c.fetchall():
+                    item_list[type].append(tu[0])
+
+                for item in white_list[type]:
+                    item_list[type].remove(item)
+                for item in black_list[type]:
+                    item_list[type].remove(item)
+                self.update_taglist()
+
         def name_toggled(self):
             self.Sort_Count.setChecked(False)
             self.reorder_taglist()
@@ -1515,8 +1636,7 @@ class Ui_HentaiFoxDesktop(QMainWindow):
                 feature = "tag"
             elif self.Sort_Count.isChecked() == True:
                 feature = "galleries"
-            create_itemlist(feature,up_down)
-            self.update_taglist()
+            self.reorder_itemlist(feature,up_down)
 #---------update-functions-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     if True:
         def update_start(self):
