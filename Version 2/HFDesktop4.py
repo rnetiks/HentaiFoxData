@@ -1,3 +1,4 @@
+# region-imports
 from PyQt5 import QtCore, QtGui, QtWidgets, QtWebEngineWidgets
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
@@ -19,17 +20,16 @@ import sqlite3
 
 conn = sqlite3.connect("Data.db")
 c = conn.cursor()
-
-# ---Global-Setup---------------
-if True:
-    types = ["parodies", "characters", "tags", "artists", "groups", "categories"]
-    white_list = {}
-    black_list = {}
-    item_list = {}
-    result_view_list = []
-
-    tag_info_setting = 0
-# ---Define-Converter------------
+#endregion
+# region---Global-Setup--------------
+types = ["parodies", "characters", "tags", "artists", "groups", "categories"]
+white_list = {}
+black_list = {}
+item_list = {}
+result_view_list = []
+tag_info_setting = 0
+#endregion
+# region---Define-Converter----------
 def type_converter(type):
     switcher = {
         "parodies":     "parody",
@@ -40,8 +40,8 @@ def type_converter(type):
         "categories":   "category"
     }
     return switcher.get(type)
-
-# ---Define-Itemlist-----------
+#endregion
+# region---Define-Itemlist-----------
 def create_itemlist(feature, up_down):
     for type in types:
         typex = type_converter(type)
@@ -51,18 +51,15 @@ def create_itemlist(feature, up_down):
         c.execute(f"SELECT DISTINCT tag FROM {typex}information WHERE true ORDER BY {feature} {up_down}")
         for tu in c.fetchall():
             item_list[type].append(tu[0])
-
-
-# ---get-latest-gallery----------
-if True:
-    web = requests.get("https://hentaifox.com/")
-    html = web.text
-    soup = BeautifulSoup(html, "html.parser")
-    no1 = str(soup.find("div", attrs={"class": "inner_thumb"}))
-    latest_gallery = int(no1[no1.find("/gallery/") + 9:no1.find('/"><img')])
-
-
-# ---GUI-------------------------
+#endregion
+# region---get-latest-gallery--------
+web = requests.get("https://hentaifox.com/")
+html = web.text
+soup = BeautifulSoup(html, "html.parser")
+no1 = str(soup.find("div", attrs={"class": "inner_thumb"}))
+latest_gallery = int(no1[no1.find("/gallery/") + 9:no1.find('/"><img')])
+#endregion
+# region---GUI-----------------------
 class Ui_HentaiFoxDesktop(QMainWindow):
     def setupUi(self, HentaiFoxDesktop):
         # region Setup the GUI
@@ -79,6 +76,14 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         font14.setFamily("Arial")
         font14.setPointSize(14)
         font14.setWeight(50)
+        font15 = QtGui.QFont()
+        font15.setFamily("Arial")
+        font15.setPointSize(15)
+        font15.setWeight(50)
+        font30 = QtGui.QFont()
+        font30.setFamily("Arial")
+        font30.setPointSize(30)
+        font30.setWeight(80)
         HentaiFoxDesktop.setObjectName("HentaiFoxDesktop")
         HentaiFoxDesktop.resize(1920, 1000)
         self.status = QStatusBar()
@@ -219,6 +224,30 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         self.tag_info_overlay.setFrameShape(QFrame.StyledPanel)
         self.tag_info_overlay.setLineWidth(2)
         self.tag_info_overlay.hide()
+
+        self.gallery_info_overlay = QLabel(self.browse)
+        self.gallery_info_overlay.setStyleSheet("background-color: white")
+        self.gallery_info_overlay.setFont(font12)
+        self.gallery_info_overlay.setAlignment(Qt.AlignCenter)
+        self.gallery_info_overlay.setFrameShape(QFrame.StyledPanel)
+        self.gallery_info_overlay.setLineWidth(2)
+        self.gallery_info_overlay.hide()
+
+        self.gallery_taginfo_overlay = QLabel(self.browse)
+        self.gallery_taginfo_overlay.setStyleSheet("background-color: white")
+        self.gallery_taginfo_overlay.setFont(font12)
+        self.gallery_taginfo_overlay.setAlignment(Qt.AlignCenter)
+        self.gallery_taginfo_overlay.setFrameShape(QFrame.StyledPanel)
+        self.gallery_taginfo_overlay.setLineWidth(2)
+        self.gallery_taginfo_overlay.hide()
+
+        self.gallery_scraping_overlay = QLabel(self.browse)
+        self.gallery_scraping_overlay.setStyleSheet("background-color: red")
+        self.gallery_scraping_overlay.setFont(font30)
+        self.gallery_scraping_overlay.setAlignment(Qt.AlignCenter)
+        self.gallery_scraping_overlay.setFrameShape(QFrame.StyledPanel)
+        self.gallery_scraping_overlay.setLineWidth(2)
+        self.gallery_scraping_overlay.hide()
 
         self.gridLayout_2.addLayout(self.verticalLayout, 0, 0, 1, 1)
         self.tabWidget.addTab(self.browse, "")
@@ -928,8 +957,7 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         self.tabs.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(HentaiFoxDesktop)
         # endregion
-        # ---------browser-setup----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        # region Browser Setup
+        # region---------browser-setup----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
         self.tabWidget.setCurrentIndex(0)
         self.add_new_tab(QUrl('https://hentaifox.com/'), 'Homepage')
         self.urlbar.setText("https://hentaifox.com/")
@@ -952,8 +980,7 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         self.browserMenu = QMenu()
         self.create_menu()
         # endregion
-        # ---------multi-search-setup-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        # region Multi Search Setup
+        # region---------multi-search-setup-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
         create_itemlist("tag", "ASC")
         self.choosetype.addItem("-- Choose Type --")
         self.choosetype.addItem("tags")
@@ -965,8 +992,7 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         self.describtion.setText("Select tag to view description")
         self.percentagecount.setValue(0)
         # endregion
-        # ---------update-setup-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        # region Update Setup
+        # region---------update-setup-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
         self.startslider.setMaximum(int(latest_gallery))
         self.startslider.setValue(int(latest_gallery - 500))
         self.stopslider.setMaximum(int(latest_gallery))
@@ -974,13 +1000,11 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         self.start.setText(f"Start searching for gaps and updates at: {latest_gallery-500}")
         self.stop.setText(f"Stop searching for gaps and updates at: {latest_gallery}")
         # endregion
-        # ---------result-setup-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        # region Result Setup
-        self.choosedisplaytype.addItem("ID")
+        # region---------result-setup-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
         self.choosedisplaytype.addItem("TITLE")
+        self.choosedisplaytype.addItem("ID")
         # endregion
-        # ---------browser-signals--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        # region Browser Signals
+        # region---------browser-signals--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
         self.backbutton.clicked.connect(lambda: self.tabs.currentWidget().back())
         self.forwardbutton.clicked.connect(lambda: self.tabs.currentWidget().forward())
         self.reloadbutton.clicked.connect(lambda: self.tabs.currentWidget().reload())
@@ -992,8 +1016,7 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         self.urlbar.returnPressed.connect(self.navigate_to_url)
         self.downloadbutton.clicked.connect(self.download)
         # endregion
-        # ---------multi-search-signals---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        # region Multi Search Signals
+        # region---------multi-search-signals---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
         self.choosetype.activated.connect(self.update_taglist)
         self.whitelist_addbutton.clicked.connect(self.whitelist_add)
         self.whitelist_removebutton.clicked.connect(self.whitelist_remove)
@@ -1013,14 +1036,12 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         self.Sort_Name.clicked.connect(self.name_toggled)
         self.Sort_Count.clicked.connect(self.count_toggled)
         # endregion
-        # ---------update-signals---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        # region Update Signals
+        # region---------update-signals---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
         self.startslider.valueChanged.connect(self.update_start)
         self.stopslider.valueChanged.connect(self.update_stop)
         self.updatebutton.clicked.connect(self.update_datamap)
         # endregion
-        # ---------result-signals---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-        # region Result Signals
+        # region---------result-signals---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
         self.tabWidget.currentChanged.connect(self.load_result_filelist)
         self.loadfilebutton.clicked.connect(self.load_results)
         self.resultlist.currentItemChanged.connect(self.preview)
@@ -1042,7 +1063,7 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         self.openjson_button.clicked.connect(self.open_json_folder)
 
     # endregion
-    # ---------set-text---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    # region---------set-text----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     def retranslateUi(self, HentaiFoxDesktop):
         _translate = QtCore.QCoreApplication.translate
         HentaiFoxDesktop.setWindowTitle(_translate("HentaiFoxDesktop", "HentaiFox Desktop"))
@@ -1121,1096 +1142,1433 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         self.SortR_DESC.setText("Descending")
         self.openjson_button.setText('Open "Results (JSON)"')
         self.opentxt_button.setText('Open "Results (TXT)"')
+    # endregion
+    # region ---------browser-functions------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    def add_new_tab(self, qurl=None, label="Loading..."):
+        if qurl is None:
+            qurl = QUrl('https://hentaifox.com/')
+        browser = WebEngineView(self)
+        browser.setUrl(qurl)
+        i = self.tabs.addTab(browser, label)
+        self.tabs.setCurrentIndex(i)
+        browser.urlChanged.connect(lambda qurl, browser=browser: self.update_urlbar(qurl, browser))
+        browser.loadFinished.connect(
+            lambda _, i=i, browser=browser: self.tabs.setTabText(i, browser.page().title()))
+        browser.page().linkHovered.connect(lambda url=browser.page().linkHovered: self.link_hovered(url))
 
-    # ---------browser-functions------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    if True:
-        def add_new_tab(self, qurl=None, label="Loading..."):
-            if qurl is None:
-                qurl = QUrl('https://hentaifox.com/')
-            browser = WebEngineView(self)
-            browser.setUrl(qurl)
-            i = self.tabs.addTab(browser, label)
+    def create_new_tab(self, page):
+        browser = page
+        i = self.tabs.addTab(browser, "loading...")
+        c.execute("SELECT value FROM settings WHERE setting='switch_tabs_setting'")
+        switch_tabs_setting = int(c.fetchone()[0])
+        if switch_tabs_setting == 1:
             self.tabs.setCurrentIndex(i)
-            browser.urlChanged.connect(lambda qurl, browser=browser: self.update_urlbar(qurl, browser))
-            browser.loadFinished.connect(
-                lambda _, i=i, browser=browser: self.tabs.setTabText(i, browser.page().title()))
-            browser.page().linkHovered.connect(lambda url=browser.page().linkHovered: self.link_hovered(url))
+        browser.urlChanged.connect(lambda qurl, browser=browser: self.update_urlbar(qurl, browser))
+        browser.loadFinished.connect(
+            lambda _, i=i, browser=browser: self.tabs.setTabText(i, browser.page().title()))
 
-        def create_new_tab(self, page):
-            browser = page
-            i = self.tabs.addTab(browser, "loading...")
-            c.execute("SELECT value FROM settings WHERE setting='switch_tabs_setting'")
-            switch_tabs_setting = int(c.fetchone()[0])
-            if switch_tabs_setting == 1:
-                self.tabs.setCurrentIndex(i)
-            browser.urlChanged.connect(lambda qurl, browser=browser: self.update_urlbar(qurl, browser))
-            browser.loadFinished.connect(
-                lambda _, i=i, browser=browser: self.tabs.setTabText(i, browser.page().title()))
+    def tab_open_doubleclick(self, i):
+        if i == -1:
+            self.add_new_tab(qurl=QUrl("https://hentaifox.com/"))
 
-        def tab_open_doubleclick(self, i):
-            if i == -1:
-                self.add_new_tab(qurl=QUrl("https://hentaifox.com/"))
+    def current_tab_changed(self, i):
+        qurl = self.tabs.currentWidget().url()
+        self.update_urlbar(qurl, self.tabs.currentWidget())
+        self.update_zoom()
+        self.refresh_bookmarks()
+        self.update_tab_count()
 
-        def current_tab_changed(self, i):
-            qurl = self.tabs.currentWidget().url()
-            self.update_urlbar(qurl, self.tabs.currentWidget())
+    def update_zoom(self):
+        zoomvalue = int(self.tabs.currentWidget().zoomFactor() * 100)
+        self.zoomslider.setValue(zoomvalue)
+
+    def close_current_tab(self, i):
+        if self.tabs.count() < 2:
+            return
+
+        self.tabs.removeTab(i)
+
+    def navigate_home(self):
+        self.tabs.currentWidget().setUrl(QUrl("https://hentaifox.com/"))
+
+    def navigate_to_url(self):
+        q = QUrl(self.urlbar.text())
+        if q.scheme() == "":
+            q.setScheme("http")
+        url_raw = q.url()
+        if str(url_raw).startswith("http:"):
+            url_raw = str(url_raw).replace("http:", "https://")
+        if url_raw.startswith("https://hentaifox.com"):
+            self.tabs.currentWidget().setUrl(QUrl(url_raw))
+
+    def update_urlbar(self, q, browser=None):
+        if browser != self.tabs.currentWidget():
+            return
+
+        self.urlbar.setText(q.toString())
+        self.urlbar.setCursorPosition(0)
+        self.refresh_bookmarks()
+
+        if q.toString() != "":
+            if not q.toString().startswith("https://hentaifox.com/"):
+                if browser.history().canGoBack() == True:
+                    browser.back()
+                else:
+                    self.tabs.removeTab(self.tabs.currentIndex())
+
+    def zoom_browser(self):
+        webview = self.tabs.currentWidget()
+        zoomfactor = int(self.zoomslider.value()) * 0.01
+        webview.setZoomFactor(zoomfactor)
+
+    def zoom_browser2(self, value):
+        if self.tabs.currentWidget().zoomFactor() + 0.1 < 2 and value > 0:
+            zoomfactor = self.tabs.currentWidget().zoomFactor() + value
+            self.tabs.currentWidget().setZoomFactor(zoomfactor)
             self.update_zoom()
-            self.refresh_bookmarks()
-            self.update_tab_count()
-
-        def update_zoom(self):
-            zoomvalue = int(self.tabs.currentWidget().zoomFactor() * 100)
-            self.zoomslider.setValue(zoomvalue)
-
-        def close_current_tab(self, i):
-            if self.tabs.count() < 2:
-                return
-
-            self.tabs.removeTab(i)
-
-        def navigate_home(self):
-            self.tabs.currentWidget().setUrl(QUrl("https://hentaifox.com/"))
-
-        def navigate_to_url(self):
-            q = QUrl(self.urlbar.text())
-            if q.scheme() == "":
-                q.setScheme("http")
-            url_raw = q.url()
-            if str(url_raw).startswith("http:"):
-                url_raw = str(url_raw).replace("http:", "https://")
-            if url_raw.startswith("https://hentaifox.com"):
-                self.tabs.currentWidget().setUrl(QUrl(url_raw))
-
-        def update_urlbar(self, q, browser=None):
-            if browser != self.tabs.currentWidget():
-                return
-
-            self.urlbar.setText(q.toString())
-            self.urlbar.setCursorPosition(0)
-            self.refresh_bookmarks()
-
-            if q.toString() != "":
-                if not q.toString().startswith("https://hentaifox.com/"):
-                    if browser.history().canGoBack() == True:
-                        browser.back()
-                    else:
-                        self.tabs.removeTab(self.tabs.currentIndex())
-
-        def zoom_browser(self):
-            webview = self.tabs.currentWidget()
-            zoomfactor = int(self.zoomslider.value()) * 0.01
-            webview.setZoomFactor(zoomfactor)
-
-        def zoom_browser2(self, value):
-            if self.tabs.currentWidget().zoomFactor() + 0.1 < 2 and value > 0:
-                zoomfactor = self.tabs.currentWidget().zoomFactor() + value
-                self.tabs.currentWidget().setZoomFactor(zoomfactor)
-                self.update_zoom()
-            if value < 0:
-                zoomfactor = self.tabs.currentWidget().zoomFactor() + value
-                self.tabs.currentWidget().setZoomFactor(zoomfactor)
-                self.update_zoom()
-
-        def reset_zoom(self):
-            self.tabs.currentWidget().setZoomFactor(1)
+        if value < 0:
+            zoomfactor = self.tabs.currentWidget().zoomFactor() + value
+            self.tabs.currentWidget().setZoomFactor(zoomfactor)
             self.update_zoom()
 
-        def download(self):
-            url = self.tabs.currentWidget().url().url()
-            if url.startswith("https://hentaifox.com/g/"):
-                web = requests.get(f"{url}")
-                html = web.text
-                soup = BeautifulSoup(html, 'html.parser')
-                okay = str(soup.find('div', attrs={"class": "browse_buttons"}))
-                gal = okay[okay.find('href="') + 6:okay.find('">Back')]
-                url = f"https://hentaifox.com{gal}"
-            if url[:30] == "https://hentaifox.com/gallery/":
+    def reset_zoom(self):
+        self.tabs.currentWidget().setZoomFactor(1)
+        self.update_zoom()
 
-                def download(url2, x):
-                    resource = requests.get(url2)
-                    if str(resource) == "<Response [200]>":
-                        output = open(f"{title}\{x}.jpg", "wb")
-                        output.write(resource.content)
-                        output.close()
-                        print(f"{x} done")
-                    else:
-                        url2 = url2[:-3] + "png"
-                        resource2 = requests.get(url2)
-                        output = open(f"{title}\{x}.png", "wb")
-                        output.write(resource2.content)
-                        output.close()
-                        print(f"{x} done")
+    def download(self):
+        url = self.tabs.currentWidget().url().url()
+        if url.startswith("https://hentaifox.com/g/"):
+            web = requests.get(f"{url}")
+            html = web.text
+            soup = BeautifulSoup(html, 'html.parser')
+            okay = str(soup.find('div', attrs={"class": "browse_buttons"}))
+            gal = okay[okay.find('href="') + 6:okay.find('">Back')]
+            url = f"https://hentaifox.com{gal}"
+        if url[:30] == "https://hentaifox.com/gallery/":
 
-                web = requests.get(f"{url}")
+            def download(url2, x):
+                resource = requests.get(url2)
+                if str(resource) == "<Response [200]>":
+                    output = open(f"{title}\{x}.jpg", "wb")
+                    output.write(resource.content)
+                    output.close()
+                    print(f"{x} done")
+                else:
+                    url2 = url2[:-3] + "png"
+                    resource2 = requests.get(url2)
+                    output = open(f"{title}\{x}.png", "wb")
+                    output.write(resource2.content)
+                    output.close()
+                    print(f"{x} done")
+
+            web = requests.get(f"{url}")
+            html = web.text
+            soup = BeautifulSoup(html, 'html.parser')
+            okay = soup.find('title')
+            title = str(okay.text).replace("|", "_").replace(".", "").replace(":", "-")
+            if str(okay) != "<title>404 Not Found - HentaiFox</title>":
+                dir = str(html)[
+                      str(html).find('input type="hidden" name="load_dir" id="load_dir"') + 57:str(html).find(
+                          'input type="hidden" name="load_id" id="load_id"') - 5]
+                show_all_id_raw = str(
+                    soup.find("input", attrs={"type": "hidden", "name": "load_id", "id": "load_id"}))
+                show_all_pages_raw = str(
+                    soup.find("input", attrs={"type": "hidden", "name": "load_pages", "id": "load_pages"}))
+                id = show_all_id_raw[show_all_id_raw.find('value="') + 7:-3]
+                pages = show_all_pages_raw[show_all_pages_raw.find('value="') + 7:-3]
+                msg = QtWidgets.QMessageBox
+                reply = msg.question(self.tabs, "Download", f"Do you really want to download\n{okay.text[:-12]}?",
+                                     msg.Ok | msg.Cancel)
+                if reply == msg.Ok:
+                    try:
+                        os.mkdir(f"./{title}")
+                    except FileExistsError:
+                        print("Warning: Folder already exists")
+                        pass
+                    with concurrent.futures.ThreadPoolExecutor() as executor:
+                        for x in range(int(pages) + 1):
+                            if x > 0:
+                                url2 = f"https://i.hentaifox.com/{dir}/{id}/{x}.jpg"
+                                print(url2)
+                                executor.submit(download, url2, x)
+
+                    with ZipFile(f"Download/{title}.zip", "w") as zip:
+                        print("Zipping...")
+                        for file in os.listdir(f"./{title}/"):
+                            zip.write(f"{title}/{file}")
+                        print("Zipping done")
+                        shutil.rmtree(f'./{title}/')
+                    msg = QtWidgets.QMessageBox(self.tabs)
+                    msg.setWindowTitle("Download Finished")
+                    msg.setText(f'You can find\n"{title}.zip"\nin the "Download" folder.')
+                    msg.exec_()
+
+    def add_bookmark(self):
+        url = self.tabs.currentWidget().url().url()
+        c.execute(f"SELECT * FROM bookmarks WHERE url='{url}'")
+        if len(c.fetchall()) < 1:
+            c.execute(
+                f"INSERT INTO bookmarks VALUES ('{url}','{self.tabs.currentWidget().page().title().replace('Free Hentai Manga, Doujinshi and Anime Porn','Home').replace(' - HentaiFox','').replace(' - Hentai Galleries','').replace('Free Hentai Manga and Doujinshi','Overview')}')")
+            conn.commit()
+            self.refresh_bookmarks(mode="remove")
+
+    def remove_bookmark(self):
+        url = self.tabs.currentWidget().url().url()
+        c.execute(f"SELECT * FROM bookmarks WHERE url='{url}'")
+        if len(c.fetchall()) > 0:
+            c.execute(f"DELETE FROM bookmarks WHERE url='{url}'")
+            conn.commit()
+            self.refresh_bookmarks(mode="add")
+
+    def refresh_bookmarks(self, mode=None):
+        url = self.tabs.currentWidget().url().url()
+
+        bookmarks = []
+        c.execute("SELECT * FROM bookmarks WHERE true")
+        for tu in c.fetchall():
+            bookmarks.append(tu)
+
+        if mode == None:
+            c.execute(f"SELECT * FROM bookmarks WHERE url='{url}'")
+            if len(c.fetchall()) > 0:
+                mode = "remove"
+            elif len(c.fetchall()) < 1:
+                mode = "add"
+        if mode == "remove":
+            self.bookmark.setIcon(QIcon("icons/BookmarkSet.png"))
+            self.bookmarkMenu.clear()
+            self.bookmarkMenu.addAction(QIcon("icons/remove_Bookmark.png"), "Remove Bookmark", self.remove_bookmark,
+                                        QKeySequence("Ctrl+D"))
+            self.bookmarkMenu.addSeparator()
+            for bookmark in bookmarks:
+                self.bookmarkMenu.addAction(f"{bookmark[1]}",
+                                            lambda bookmark_url=bookmark[0]: self.load_bookmark(bookmark_url))
+        elif mode == "add":
+            self.bookmark.setIcon(QIcon("icons/Bookmark.png"))
+            self.bookmarkMenu.clear()
+            self.bookmarkMenu.addAction(QIcon("icons/add_Bookmark.png"), "Add Bookmark", self.add_bookmark,
+                                        QKeySequence("Ctrl+D"))
+            self.bookmarkMenu.addSeparator()
+            for bookmark in bookmarks:
+                self.bookmarkMenu.addAction(f"{bookmark[1]}",
+                                            lambda bookmark_url=bookmark[0]: self.load_bookmark(bookmark_url))
+
+    def load_bookmark(self, bookmark_url):
+        self.tabs.currentWidget().load(QUrl(bookmark_url))
+
+    def update_tab_count(self):
+        lenght = self.tabs.count()
+        self.tabsMenu.clear()
+        for x in range(lenght):
+            if x <= 8:
+                i = x + 1
+                self.tabsMenu.addAction(f"Switch to Tab {i}", lambda x=x: self.tabs.setCurrentIndex(x),
+                                        QKeySequence(f"Ctrl+{i}"))
+
+    def copy_url(self):
+        url = self.tabs.currentWidget().url().url()
+        pyperclip.copy(url)
+
+    def link_hovered(self,url):
+        if len(url) > 150:
+            url = url[:100]+"..."
+        if url != "":
+            p = self.browse.geometry().bottomLeft() + QPoint(12,-33)
+            self.hover_url.move(p)
+            self.hover_url.raise_()
+            self.hover_url.setText(url)
+            self.hover_url.adjustSize()
+            self.hover_url.show()
+        else:
+            self.hover_url.hide()
+            self.tag_info_overlay.hide()
+            self.gallery_info_overlay.hide()
+            self.gallery_taginfo_overlay.hide()
+
+        c.execute("SELECT value FROM settings WHERE setting='tag_info_setting'")
+        tag_info_setting = c.fetchone()[0]
+        if tag_info_setting == 1:
+            if url.startswith("https://hentaifox.com/tag/"):
+                c.execute(f"SELECT * FROM taginformation WHERE url='{url}'")
+                tu = c.fetchone()
+                if tu != None:
+                    tag = tu[0]
+                    galleries = tu[1]
+                    wiki_description = tu[2]
+                    if len(wiki_description) > 180:
+                        positions = ( [pos for pos, char in enumerate(wiki_description) if char == " "])
+                        postition = min(positions, key=lambda x:abs(x-170))
+                        print(postition)
+                        wiki_description = f"{wiki_description[:postition]}\n{wiki_description[postition:]}"
+
+
+                    info = f"{tag}:\n{wiki_description}\nReal amount of Galleries: {galleries}"
+                else:
+                    info = "Currently Unavalible"
+
+                self.tag_info_overlay.raise_()
+                self.tag_info_overlay.setText(info)
+                self.tag_info_overlay.adjustSize()
+                p = self.tabs.geometry().bottomRight() - QPoint(int(self.tabs.geometry().width()/2+(self.tag_info_overlay.geometry().width()/2)),int(self.tag_info_overlay.geometry().height()+30))
+                self.tag_info_overlay.move(p)
+                self.tag_info_overlay.show()
+
+        c.execute("SELECT value FROM settings WHERE setting='gallery_info_setting'")
+        gallery_info_setting = int(c.fetchone()[0])
+        if gallery_info_setting == 1:
+            if url.startswith("https://hentaifox.com/gallery/"):
+                id = url[30:-1]
+                c.execute(f"SELECT * FROM galleryinformation WHERE gal={id}")
+                test = c.fetchall()
+                if test != []:
+                    pages = test[0][2]
+                    text = ""
+                    for type in types:
+                        typex = type_converter(type)
+                        c.execute(f"SELECT tag FROM gallery{type} WHERE gal={id}")
+                        list_ = c.fetchall()
+                        if type != "tags":
+                            if list_ == []:
+                                pass
+                            else:
+                                text = text + f"\n\n{type}:\n"
+                                comb = ""
+                                for tu in list_:
+                                    text = text +comb+ f"{tu[0]}"
+                                    comb = ", "
+                        else:
+                            text2 = "Tags:"
+                            if list_ == []:
+                                text2 = "No tags in database"
+                                pass
+                            else:
+                                for tu in list_:
+                                    text2 = text2 + f"\n{tu[0]}"
+                    text = text+ f"\n\nPages:\n{pages}"
+
+                    self.gallery_info_overlay.raise_()
+                    self.gallery_info_overlay.setText(text[2:])
+                    self.gallery_info_overlay.adjustSize()
+                    p = self.tabs.geometry().topRight() + QPoint(-(int(self.gallery_info_overlay.geometry().width())+40),100)
+                    self.gallery_info_overlay.move(p)
+                    self.gallery_info_overlay.show()
+
+                    self.gallery_taginfo_overlay.raise_()
+                    self.gallery_taginfo_overlay.setText(text2)
+                    self.gallery_taginfo_overlay.adjustSize()
+                    p = self.tabs.geometry().topLeft() + QPoint(20,100)
+                    self.gallery_taginfo_overlay.move(p)
+                    self.gallery_taginfo_overlay.show()
+                else:
+                    self.gallery_scraping_overlay.raise_()
+                    self.gallery_scraping_overlay.setText(f"Scraping information of gallery ID[{id}]")
+                    self.gallery_scraping_overlay.adjustSize()
+                    p = self.tabs.geometry().bottomRight() - QPoint(int(self.tabs.geometry().width()/2+self.gallery_scraping_overlay.geometry().width()/2) ,int(self.tabs.geometry().height()/2+self.gallery_scraping_overlay.geometry().height()/2))
+                    self.gallery_scraping_overlay.move(p)
+                    self.gallery_scraping_overlay.show()
+                    self.gallery_info_overlay.hide()
+                    self.gallery_taginfo_overlay.hide()
+                    print(f"Gallery with ID [{id}] not in Database, scrapping information.")
+                    QtWidgets.qApp.processEvents()
+
+                    def scrap_on_hover(id):
+                        QtWidgets.qApp.processEvents()
+
+                        conn = sqlite3.connect("Data.db")
+                        c = conn.cursor()
+                        gaps = []
+                        tags_list = []
+                        parodies_list = []
+                        characters_list = []
+                        artists_list = []
+                        groups_list = []
+                        categories_list = []
+                        informations_list = []
+
+                        def fetch(x):
+                            web = requests.get(f"https://hentaifox.com/gallery/{x}/")
+                            print(f"Request finished ({x})")
+                            html = web.text
+                            soup = BeautifulSoup(html, 'html.parser')
+                            okay = soup.find('title')
+                            if str(okay) != "<title>404 Not Found - HentaiFox</title>":
+
+                                try:
+                                    tag_result = soup.find_all('ul', attrs={'class':'tags'})
+                                    if tag_result != []:
+                                        tag_res = tag_result[0]
+                                        tags_raw = tag_res.find_all('a', attrs={'class':'tag_btn'})
+                                        for tag_raw in tags_raw:
+                                            try:
+                                                split_tag = tag_raw.find("span", attrs={"class":"split_tag"}).text
+                                            except:
+                                                split_tag = ''
+                                            tag = tag_raw.text[:-len(tag_raw.find("span", attrs={"class":"t_badge"}).text)][:-1].replace(split_tag,'')
+                                            if int(tag_raw.find("span",attrs={'class':'t_badge'}).text) > 100:
+                                                tags_list.append(f"('{x}','{tag}')")
+
+                                    par_result = soup.find_all('ul', attrs={'class':'parodies'})
+                                    if par_result != []:
+                                        par_res = par_result[0]
+                                        pars_raw = par_res.find_all('a', attrs={'class':'tag_btn'})
+                                        for par_raw in pars_raw:
+                                            try:
+                                                split_tag = par_raw.find("span", attrs={"class":"split_tag"}).text
+                                            except:
+                                                split_tag = ''
+                                            par = par_raw.text[:-len(par_raw.find("span", attrs={"class":"t_badge"}).text)][:-1].replace(split_tag,'')
+                                            if int(par_raw.find("span",attrs={'class':'t_badge'}).text) > 1:
+                                                parodies_list.append(f"('{x}','{par}')")
+
+                                    char_result = soup.find_all('ul', attrs={'class':'characters'})
+                                    if char_result != []:
+                                        char_res = char_result[0]
+                                        chars_raw = char_res.find_all('a', attrs={'class':'tag_btn'})
+                                        for char_raw in chars_raw:
+                                            try:
+                                                split_tag = char_raw.find("span", attrs={"class":"split_tag"}).text
+                                            except:
+                                                split_tag = ''
+                                            char = char_raw.text[:-len(char_raw.find("span", attrs={"class":"t_badge"}).text)][:-1].replace(split_tag,'')
+                                            if int(char_raw.find("span",attrs={'class':'t_badge'}).text) > 1:
+                                                characters_list.append(f"('{x}','{char}')")
+
+                                    art_result = soup.find_all('ul', attrs={'class':'artists'})
+                                    if art_result != []:
+                                        art_res = art_result[0]
+                                        arts_raw = art_res.find_all('a', attrs={'class':'tag_btn'})
+                                        for art_raw in arts_raw:
+                                            try:
+                                                split_tag = art_raw.find("span", attrs={"class":"split_tag"}).text
+                                            except:
+                                                split_tag = ''
+                                            art = art_raw.text[:-len(art_raw.find("span", attrs={"class":"t_badge"}).text)][:-1].replace(split_tag,'')
+                                            if int(art_raw.find("span",attrs={'class':'t_badge'}).text) > 1:
+                                                artists_list.append(f"('{x}','{art}')")
+
+                                    grp_result = soup.find_all('ul', attrs={'class':'groups'})
+                                    if grp_result != []:
+                                        grp_res = grp_result[0]
+                                        grps_raw = grp_res.find_all('a', attrs={'class':'tag_btn'})
+                                        for grp_raw in grps_raw:
+                                            try:
+                                                split_tag = grp_raw.find("span", attrs={"class":"split_tag"}).text
+                                            except:
+                                                split_tag = ''
+                                            grp = grp_raw.text[:-len(grp_raw.find("span", attrs={"class":"t_badge"}).text)][:-1].replace(split_tag,'')
+                                            if int(grp_raw.find("span",attrs={'class':'t_badge'}).text) > 1:
+                                                groups_list.append(f"('{x}','{grp}')")
+
+                                    cat_result = soup.find_all('ul', attrs={'class':'categories'})
+                                    if cat_result != []:
+                                        cat_res = cat_result[0]
+                                        cats_raw = cat_res.find_all('a', attrs={'class':'tag_btn'})
+                                        for cat_raw in cats_raw:
+                                            try:
+                                                split_tag = cat_raw.find("span", attrs={"class":"split_tag"}).text
+                                            except:
+                                                split_tag = ''
+                                            cat = cat_raw.text[:-len(cat_raw.find("span", attrs={"class":"t_badge"}).text)][:-1].replace(split_tag,'')
+                                            if int(cat_raw.find("span",attrs={'class':'t_badge'}).text) > 1:
+                                                categories_list.append(f"('{x}','{cat}')")
+
+                                    pages_raw = soup.find("span", attrs={"class":"i_text pages"}).text
+                                    pages = pages_raw[pages_raw.find(": ")+2:]
+                                    title = soup.find('title').text.replace("- HentaiFox", "").replace("'","''")
+                                    image_raw = str(soup.find("div", attrs={'class':"cover"}))
+                                    image = image_raw[image_raw.find("src=")+5:image_raw.find('"/>')]
+                                    informations_list.append(f"('{x}','{title}','{pages}','{image}')")
+                                except:
+                                    with open("error.txt","a") as f:
+                                        f.write(f"Error with {x}\n")
+                                        f.close()
+                                    if x in tags_list:
+                                        tags_list.remove(x)
+                                    if x in parodies_list:
+                                        parodies_list.remove(x)
+                                    if x in characters_list:
+                                        characters_list.remove(x)
+                                    if x in artists_list:
+                                        artists_list.remove(x)
+                                    if x in groups_list:
+                                        groups_list.remove(x)
+                                    if x in categories_list:
+                                        categories_list.remove(x)
+                                    if x in informations_list:
+                                        informations_list.remove(x)
+                            else:
+                                print(f"Error: 404 at {x}")
+                                gaps.append(f"{x}\n")
+                            return f"Done ({x})"
+
+                        change_tags = {}
+                        for type in types:
+                            change_tags[type] = []
+                        def save():
+                            if len(tags_list) > 0:
+                                print("saving tags_list")
+                                string = "INSERT INTO gallerytags VALUES "
+                                comma = ""
+                                tags_list_copy = list(tags_list)
+                                tags_list.clear()
+                                for tu in tags_list_copy:
+                                    string = string + comma + tu
+                                    comma = ", "
+                                    if tu[tu.find(",")+2:tu.find(")")-1] not in change_tags["tags"]:
+                                        change_tags["tags"].append(tu[tu.find(",")+2:tu.find(")")-1])
+                                c.execute(string)
+                                conn.commit()
+
+
+                            if len(parodies_list) > 0:
+                                print("saving parodies_list")
+                                string = "INSERT INTO galleryparodies VALUES "
+                                comma = ""
+                                parodies_list_copy = list(parodies_list)
+                                parodies_list.clear()
+                                for tu in parodies_list_copy:
+                                    string = string + comma + tu
+                                    comma = ", "
+                                    if tu[tu.find(",")+2:tu.find(")")-1] not in change_tags["parodies"]:
+                                        change_tags["parodies"].append(tu[tu.find(",")+2:tu.find(")")-1])
+                                c.execute(string)
+                                conn.commit()
+
+                            if len(characters_list) > 0:
+                                print("saving characters_list")
+                                string = "INSERT INTO gallerycharacters VALUES "
+                                comma = ""
+                                characters_list_copy = list(characters_list)
+                                characters_list.clear()
+                                for tu in characters_list_copy:
+                                    string = string + comma + tu
+                                    comma = ", "
+                                    if tu[tu.find(",")+2:tu.find(")")-1] not in change_tags["characters"]:
+                                        change_tags["characters"].append(tu[tu.find(",")+2:tu.find(")")-1])
+                                c.execute(string)
+                                conn.commit()
+
+                            if len(artists_list) > 0:
+                                print("saving artists_list")
+                                string = "INSERT INTO galleryartists VALUES "
+                                comma = ""
+                                artists_list_copy = list(artists_list)
+                                artists_list.clear()
+                                for tu in artists_list_copy:
+                                    string = string + comma + tu
+                                    comma = ", "
+                                    if tu[tu.find(",")+2:tu.find(")")-1] not in change_tags["artists"]:
+                                        change_tags["artists"].append(tu[tu.find(",")+2:tu.find(")")-1])
+                                c.execute(string)
+                                conn.commit()
+
+                            if len(groups_list) > 0:
+                                print("saving groups_list")
+                                string = "INSERT INTO gallerygroups VALUES "
+                                comma = ""
+                                groups_list_copy = list(groups_list)
+                                groups_list.clear()
+                                for tu in groups_list_copy:
+                                    string = string + comma + tu
+                                    comma = ", "
+                                    if tu[tu.find(",")+2:tu.find(")")-1] not in change_tags["groups"]:
+                                        change_tags["groups"].append(tu[tu.find(",")+2:tu.find(")")-1])
+                                c.execute(string)
+                                conn.commit()
+
+                            if len(categories_list) > 0:
+                                print("saving categories_list")
+                                string = "INSERT INTO gallerycategories VALUES "
+                                comma = ""
+                                categories_list_copy = list(categories_list)
+                                categories_list.clear()
+                                for tu in categories_list_copy:
+                                    string = string + comma + tu
+                                    comma = ", "
+                                    if tu[tu.find(",")+2:tu.find(")")-1] not in change_tags["categories"]:
+                                        change_tags["categories"].append(tu[tu.find(",")+2:tu.find(")")-1])
+                                c.execute(string)
+                                conn.commit()
+
+                            if len(informations_list) > 0:
+                                print("saving informations_list")
+                                string = "INSERT INTO galleryinformation VALUES "
+                                comma = ""
+                                informations_list_copy = list(informations_list)
+                                informations_list.clear()
+                                for tu in informations_list_copy:
+                                    string = string + comma + tu
+                                    comma = ", "
+                                c.execute(string)
+                                conn.commit()
+
+                            stuff = {}
+                            stuff2 = {}
+                            for type in types:
+                                typex = type_converter(type)
+                                stuff[typex] = []
+                                stuff2[typex] = []
+                                for tag in change_tags[type]:
+                                    stuff2[typex].append(tag)
+                                    string = f"SELECT DISTINCT gal FROM gallery{type} WHERE tag='{tag}'"
+                                    c.execute(string)
+                                    lenght = len(c.fetchall())
+                                    stuff[typex].append(f"""WHEN '{tag}' THEN '{lenght}'""")
+                                    print(f"Counting Galleries: {type}/{tag} -- {lenght} ")
+                            for type,list_ in change_tags.items():
+                                typex = type_converter(type)
+                                if len(list_)>0:
+                                    if len(stuff2[typex]) > 1:
+                                        string = f"UPDATE {typex}information SET galleries= CASE tag "
+                                        string2 = f"END WHERE tag IN {tuple(stuff2[typex])}"
+                                        for string_ in stuff[typex]:
+                                            string = string + string_
+                                        string = string + string2
+                                        c.execute(string)
+                                        conn.commit()
+                                        print(f"commited Changes for {type}")
+                                    else:
+                                        thing = str(stuff[typex][0])
+                                        thing2 = thing[thing.find("THEN '")+6:-1]
+                                        string = f"UPDATE {typex}information SET galleries= '{thing2}' WHERE tag = '{stuff2[typex][0]}'"
+                                        c.execute(string)
+                                        conn.commit()
+                                        print(f"commited Changes for {type}")
+                        QtWidgets.qApp.processEvents()
+                        fetch(id)
+                        save()
+                        self.gallery_scraping_overlay.hide()
+                    QtWidgets.qApp.processEvents()
+                    scrap_on_hover(id)
+
+    def deactivate_taginformation(self):
+        c.execute("UPDATE settings SET value = '0' WHERE setting ='tag_info_setting'")
+        conn.commit()
+        self.create_menu()
+
+    def activate_taginformation(self):
+        c.execute("UPDATE settings SET value = '1' WHERE setting = 'tag_info_setting'")
+        conn.commit()
+        self.create_menu()
+
+    def deactivate_tabswitching(self):
+        c.execute("UPDATE settings SET value = '0' WHERE setting ='switch_tabs_setting'")
+        conn.commit()
+        self.create_menu()
+
+    def activate_tabswitching(self):
+        c.execute("UPDATE settings SET value = '1' WHERE setting = 'switch_tabs_setting'")
+        conn.commit()
+        self.create_menu()
+
+    def deactivate_galleryinformation(self):
+        c.execute("UPDATE settings SET value = '0' WHERE setting ='gallery_info_setting'")
+        conn.commit()
+        self.create_menu()
+
+    def activate_galleryinformation(self):
+        c.execute("UPDATE settings SET value = '1' WHERE setting = 'gallery_info_setting'")
+        conn.commit()
+        self.create_menu()
+
+    def create_menu(self):
+        c.execute("SELECT value FROM settings WHERE setting='tag_info_setting'")
+        tag_info_setting = int(c.fetchone()[0])
+        c.execute("SELECT value FROM settings WHERE setting='switch_tabs_setting'")
+        switch_tabs_setting = int(c.fetchone()[0])
+        c.execute("SELECT value FROM settings WHERE setting='gallery_info_setting'")
+        gallery_info_setting = int(c.fetchone()[0])
+
+        self.browserMenu.clear()
+        self.browserMenu.addAction(QIcon("icons/Back_Arrow.png"),"Back",lambda: self.tabs.currentWidget().back(),QKeySequence("Ctrl+Left"))
+        self.browserMenu.addAction(QIcon("icons/Forward_Arrow.png"),"Forward",lambda: self.tabs.currentWidget().forward(),QKeySequence("Ctrl+Right"))
+        self.browserMenu.addAction(QIcon("icons/Reload_Arrow.png"),"Reload",lambda: self.tabs.currentWidget().reload(),QKeySequence("Ctrl+R"))
+        self.browserMenu.addAction(QIcon("icons/Home-icon.png"),"Home",self.navigate_home,QKeySequence("Ctrl+H"))
+        self.browserMenu.addSeparator()
+        self.browserMenu.addAction(QIcon("icons/add_tab.png"),"New Tab",self.add_new_tab,QKeySequence("Ctrl+T"))
+        self.browserMenu.addAction(QIcon("icons/remove_tab.png"),"Close Tab",lambda i=self.tabs.currentIndex(): self.close_current_tab(i),QKeySequence("Ctrl+W"))
+        self.tabsMenu = self.browserMenu.addMenu(QIcon("icons/tab.png"),"Navigate Tabs")
+        self.tabsMenu.addAction("Switch to Tab 1",lambda: self.tabs.setCurrentIndex(0),QKeySequence("Ctrl+1"))
+        self.browserMenu.addSeparator()
+        self.browserMenu.addAction(QIcon("icons/zoom_in.png"),"Zoom in by 10%",lambda value=0.1:self.zoom_browser2(value=value),QKeySequence("Ctrl++"))
+        self.browserMenu.addAction(QIcon("icons/zoom_out.png"),"Zoom out by 10%",lambda value=-0.1:self.zoom_browser2(value=value),QKeySequence("Ctrl+-"))
+        self.browserMenu.addAction(QIcon("icons/zoom.png"),"Reset Zoom to 100%",self.reset_zoom,QKeySequence("Ctrl+0"))
+        self.browserMenu.addSeparator()
+        self.browserMenu.addAction(QIcon("icons/download.png"),"Download current Gallery",self.download,QKeySequence("Ctrl+S"))
+        self.browserMenu.addAction(QIcon("icons/copy.png"),"Copy page URL to clipboard",self.copy_url,QKeySequence("Ctrl+Shift+C"))
+        self.browserMenu.addSeparator()
+        self.settingsMenu = self.browserMenu.addMenu(QIcon("icons/setting_icon.png"),"Settings")
+
+        if tag_info_setting == 0:
+            self.settingsMenu.addAction(QIcon("icons/checkbox_empty.png"),"Display Taginformation on hover", self.activate_taginformation)
+        elif tag_info_setting == 1:
+            self.settingsMenu.addAction(QIcon("icons/checkbox_checked.png"),"Display Taginformation on hover", self.deactivate_taginformation)
+
+        if gallery_info_setting == 0:
+            self.settingsMenu.addAction(QIcon("icons/checkbox_empty.png"),"Display Galleryinformation on hover", self.activate_galleryinformation)
+        elif gallery_info_setting == 1:
+            self.settingsMenu.addAction(QIcon("icons/checkbox_checked.png"),"Display Galleryinformation on hover", self.deactivate_galleryinformation)
+
+        if switch_tabs_setting == 0:
+            self.settingsMenu.addAction(QIcon("icons/checkbox_empty.png"),"Autoswitch to new Tab when opening", self.activate_tabswitching)
+        elif switch_tabs_setting == 1:
+            self.settingsMenu.addAction(QIcon("icons/checkbox_checked.png"),"Autoswitch to new Tab when opening", self.deactivate_tabswitching)
+
+        self.menu_button.setMenu(self.browserMenu)
+    # endregion
+    # region ---------multi-search-functions-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    def update_taglist(self):
+        self.criterialist.clear()
+        if self.choosetype.currentText() == "tags":
+            for abc in item_list["tags"]:
+                self.criterialist.addItem(f"{abc}")
+        if self.choosetype.currentText() == "parodies":
+            for abc in item_list["parodies"]:
+                self.criterialist.addItem(f"{abc}")
+        if self.choosetype.currentText() == "characters":
+            for abc in item_list["characters"]:
+                self.criterialist.addItem(f"{abc}")
+        if self.choosetype.currentText() == "artists":
+            for abc in item_list["artists"]:
+                self.criterialist.addItem(f"{abc}")
+        if self.choosetype.currentText() == "groups":
+            for abc in item_list["groups"]:
+                self.criterialist.addItem(f"{abc}")
+        if self.choosetype.currentText() == "categories":
+            for abc in item_list["categories"]:
+                self.criterialist.addItem(f"{abc}")
+
+    def whitelist_add(self):
+        current = self.criterialist.currentItem()
+        if current != None:
+            type = self.choosetype.currentText()
+            item = self.criterialist.takeItem(self.criterialist.row(self.criterialist.currentItem()))
+            self.whitelist.addItem(f"{item.text()} ({type})")
+            white_list[self.choosetype.currentText()].append(item.text())
+            item_list[self.choosetype.currentText()].remove(item.text())
+
+    def whitelist_remove(self):
+        current = self.whitelist.currentItem()
+        if current != None:
+            item_raw = self.whitelist.takeItem(self.whitelist.row(self.whitelist.currentItem()))
+            item_name = item_raw.text()[:item_raw.text().find(" (")]
+            item_type = item_raw.text()[item_raw.text().find("(") + 1:item_raw.text().find(")")]
+            white_list[item_type].remove(item_name)
+            item_list[item_type].append(item_name)
+            item_list[item_type].sort()
+            self.update_taglist()
+
+    def blacklist_add(self):
+        current = self.criterialist.currentItem()
+        if current != None:
+            type = self.choosetype.currentText()
+            item = self.criterialist.takeItem(self.criterialist.row(self.criterialist.currentItem()))
+            self.blacklist.addItem(f"{item.text()} ({type})")
+            black_list[self.choosetype.currentText()].append(item.text())
+            item_list[self.choosetype.currentText()].remove(item.text())
+
+    def blacklist_remove(self):
+        current = self.blacklist.currentItem()
+        if current != None:
+            item_raw = self.blacklist.takeItem(self.blacklist.row(self.blacklist.currentItem()))
+            item_name = item_raw.text()[:item_raw.text().find(" (")]
+            item_type = item_raw.text()[item_raw.text().find("(") + 1:item_raw.text().find(")")]
+            black_list[item_type].remove(item_name)
+            item_list[item_type].append(item_name)
+            item_list[item_type].sort()
+            self.update_taglist()
+
+    def update_gallerycounter(self, abc, type):
+        if self.check_loadfacts.isChecked() == False:
+            typex = type_converter(type)
+            try:
+                c.execute(f"SELECT * FROM {typex}information WHERE tag='{abc}'")
+                tu = c.fetchone()
+                count = int(tu[1])
+                self.pagecount.display(count)
+                percentage = int(count) / int(latest_gallery)
+                self.percentagecount.setValue(int(percentage * 100))
+                text = ""
+                if tu[2] != 'None':
+                    text = text + f"{tu[2]}\nby EHwiki"
+                if tu[3] != 'None':
+                    text = text + f"\n\n{tu[3]}"
+                if text == "":
+                    text = "No description written yet.\nIf you want to add a description for this tag, please contact me on Discord:\nN. J\u00e4cha#1707"
+
+                self.describtion.setText(text)
+
+            except:
+                print("Error while loading the description or gallery-counter")
+
+    def criterialist_update_gallerycounter(self):
+        current_abc = self.criterialist.currentItem().text()
+        current_type = self.choosetype.currentText()
+        self.update_gallerycounter(abc=current_abc, type=current_type)
+
+    def whitelist_update_gallerycounter(self):
+        current_abc = self.whitelist.currentItem().text()[:self.whitelist.currentItem().text().find(" (")]
+        current_type = self.whitelist.currentItem().text()[
+                       self.whitelist.currentItem().text().find("(") + 1:self.whitelist.currentItem().text().find(
+                           ")")]
+        self.update_gallerycounter(abc=current_abc, type=current_type)
+
+    def blacklist_update_gallerycounter(self):
+        current_abc = self.blacklist.currentItem().text()[:self.blacklist.currentItem().text().find(" (")]
+        current_type = self.blacklist.currentItem().text()[
+                       self.blacklist.currentItem().text().find("(") + 1:self.blacklist.currentItem().text().find(
+                           ")")]
+        self.update_gallerycounter(abc=current_abc, type=current_type)
+
+    def opentaginbrowser(self, type, abc):
+        type = type_converter(type)
+        abc = abc.replace(" ", "-")  # .replace(".","")
+        if abc.endswith("-"):
+            abc = abc[:-1]
+        if self.check_internal.isChecked() == True:
+            qurl = QtCore.QUrl(f"https://hentaifox.com/{type}/{abc}/")
+            self.tabWidget.setCurrentIndex(0)
+            self.add_new_tab(qurl, label="loading...")
+        elif self.check_external.isChecked() == True:
+            os.system(f"start https://hentaifox.com/{type}/{abc}/")
+
+    def criterialist_opentaginbrowser(self):
+        current_abc = self.criterialist.currentItem().text()
+        current_type = self.choosetype.currentText()
+        self.opentaginbrowser(abc=current_abc, type=current_type)
+
+    def whitelist_opentaginbrowser(self):
+        current_abc = self.whitelist.currentItem().text()[:self.whitelist.currentItem().text().find(" (")]
+        current_type = self.whitelist.currentItem().text()[
+                       self.whitelist.currentItem().text().find("(") + 1:self.whitelist.currentItem().text().find(
+                           ")")]
+        self.opentaginbrowser(abc=current_abc, type=current_type)
+
+    def blacklist_opentaginbrowser(self):
+        current_abc = self.blacklist.currentItem().text()[:self.blacklist.currentItem().text().find(" (")]
+        current_type = self.blacklist.currentItem().text()[
+                       self.blacklist.currentItem().text().find("(") + 1:self.blacklist.currentItem().text().find(
+                           ")")]
+        self.opentaginbrowser(abc=current_abc, type=current_type)
+
+    def multi_search(self):
+        if self.whitelist.count() > 0:
+            start_time = time.time()
+            filename = ""
+            connection = ""
+            for list_ in white_list.values():
+                for tag in list_:
+                    filename = filename + connection + f"{tag}"
+                    connection = "-"
+            connection = "!"
+            for list_ in black_list.values():
+                for tag in list_:
+                    filename = filename + connection + f"{tag}"
+            filename = filename.replace(" ", "_")
+            whitelist = []
+            blacklist = []
+
+            string = f"SELECT DISTINCT gal FROM galleryinformation WHERE true "
+            for type, list_ in white_list.items():
+                if len(list_) > 0:
+                    for tag in white_list[type]:
+                        string = string + f"AND gal IN (SELECT gal FROM gallery{type} WHERE tag='{tag}') "
+            c.execute(f"{string}")
+            result = c.fetchall()
+            for tu in result:
+                whitelist.append(tu[0])
+
+            for type, list_ in black_list.items():
+                if len(list_) > 0:
+                    string = f"SELECT DISTINCT gal FROM galleryinformation WHERE true"
+                    for type, list_ in black_list.items():
+                        if len(list_) > 0:
+                            connection = " AND "
+                            for tag in black_list[type]:
+                                string = string + connection + f"gal IN (SELECT gal FROM gallery{type} WHERE tag='{tag}')"
+                                connection = " OR "
+                    print(string)
+                    c.execute(f"{string}")
+                    result = c.fetchall()
+                    for tu in result:
+                        blacklist.append(tu[0])
+                    break
+
+            whitelist.sort()
+            blacklist.sort()
+            if len(blacklist) > 0:
+                results = list(set(whitelist) - set(blacklist))
+            else:
+                results = list(whitelist)
+            results.sort()
+
+            if len(results) > 0:
+                with open(f"Results (TXT)/{filename}.txt", "w+") as t:
+                    for gallery in results:
+                        t.write(f"https://hentaifox.com/gallery/{gallery}/\n")
+                with open(f"Results (JSON)/{filename}.result", "w") as j:
+                    data = []
+                    for gallery in results:
+                        data.append(gallery)
+                    json.dump(data, j, indent=4)
+                self.label.setText(
+                    f'Found {len(results)} galleries. You can find "{filename}.txt" in the "Results (TXT)" folder and "{filename}.result" in the "Results (JSON)" folder.')
+            else:
+                self.label.setText(f'Sorry no results for the combination {filename}.')
+            duration = time.time() - start_time
+            self.diagnostics.setText(
+                f"Search Diagnostics:\n\nGalleries found: {len(results)}\nDuration: {duration} seconds")
+            print(f"Multisearch finished | File: {filename}.txt/result")
+
+    def internal_toggled(self):
+        self.check_external.setChecked(False)
+
+    def external_toggled(self):
+        self.check_internal.setChecked(False)
+
+    def reorder_itemlist(self, feature, up_down):
+        for type in types:
+            typex = type_converter(type)
+            item_list[type] = []
+            c.execute(f"SELECT DISTINCT tag FROM {typex}information WHERE true ORDER BY {feature} {up_down}")
+            for tu in c.fetchall():
+                item_list[type].append(tu[0])
+
+            for item in white_list[type]:
+                item_list[type].remove(item)
+            for item in black_list[type]:
+                item_list[type].remove(item)
+            self.update_taglist()
+
+    def name_toggled(self):
+        self.Sort_Name.setChecked(True)
+        self.Sort_Count.setChecked(False)
+        self.reorder_taglist()
+
+    def count_toggled(self):
+        self.Sort_Count.setChecked(True)
+        self.Sort_Name.setChecked(False)
+        self.reorder_taglist()
+
+    def asc_toggled(self):
+        self.Sort_ASC.setChecked(True)
+        self.Sort_DESC.setChecked(False)
+        self.reorder_taglist()
+
+    def desc_toggled(self):
+        self.Sort_DESC.setChecked(True)
+        self.Sort_ASC.setChecked(False)
+        self.reorder_taglist()
+
+    def reorder_taglist(self):
+        if self.Sort_ASC.isChecked() == True:
+            up_down = "ASC"
+        elif self.Sort_DESC.isChecked() == True:
+            up_down = "DESC"
+        if self.Sort_Name.isChecked() == True:
+            feature = "tag"
+        elif self.Sort_Count.isChecked() == True:
+            feature = "galleries"
+        self.reorder_itemlist(feature, up_down)
+    # endregion
+    # region ---------update-functions-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    def update_start(self):
+        self.start.setText(f"Start searching for gaps and updates at: {self.startslider.value()}")
+
+    def update_stop(self):
+        self.stop.setText(f"Stop searching for gaps and updates at: {self.stopslider.value()}")
+
+    def update_datamap(self):
+        if self.stopslider.value() > self.startslider.value():
+            msg = QtWidgets.QMessageBox()
+            msg.setWindowTitle("UPDATE")
+            msg.setText(f"About to update the database.\nThis may take a while.\nFor progress look at the console.")
+            x = msg.exec_()
+
+            start_id = self.startslider.value()
+            y = self.stopslider.value()
+
+            found = []
+            not_found = []
+
+            c.execute(f"SELECT gal FROM galleryinformation WHERE true ORDER BY gal")
+            for tu in c.fetchall():
+                found.append(tu[0])
+
+            not_found = list(set(range(start_id, int(y + 1))) - set(found))
+            not_found.sort()
+
+            print("scraping missing galleries...")
+
+            gaps = []
+            tags_list = []
+            parodies_list = []
+            characters_list = []
+            artists_list = []
+            groups_list = []
+            categories_list = []
+            informations_list = []
+
+            def fetch(x):
+                web = requests.get(f"https://hentaifox.com/gallery/{x}/")
+                print(f"Request finished ({x})")
                 html = web.text
                 soup = BeautifulSoup(html, 'html.parser')
                 okay = soup.find('title')
-                title = str(okay.text).replace("|", "_").replace(".", "").replace(":", "-")
                 if str(okay) != "<title>404 Not Found - HentaiFox</title>":
-                    dir = str(html)[
-                          str(html).find('input type="hidden" name="load_dir" id="load_dir"') + 57:str(html).find(
-                              'input type="hidden" name="load_id" id="load_id"') - 5]
-                    show_all_id_raw = str(
-                        soup.find("input", attrs={"type": "hidden", "name": "load_id", "id": "load_id"}))
-                    show_all_pages_raw = str(
-                        soup.find("input", attrs={"type": "hidden", "name": "load_pages", "id": "load_pages"}))
-                    id = show_all_id_raw[show_all_id_raw.find('value="') + 7:-3]
-                    pages = show_all_pages_raw[show_all_pages_raw.find('value="') + 7:-3]
-                    msg = QtWidgets.QMessageBox
-                    reply = msg.question(self.tabs, "Download", f"Do you really want to download\n{okay.text[:-12]}?",
-                                         msg.Ok | msg.Cancel)
-                    if reply == msg.Ok:
-                        try:
-                            os.mkdir(f"./{title}")
-                        except FileExistsError:
-                            print("Warning: Folder already exists")
-                            pass
-                        with concurrent.futures.ThreadPoolExecutor() as executor:
-                            for x in range(int(pages) + 1):
-                                if x > 0:
-                                    url2 = f"https://i.hentaifox.com/{dir}/{id}/{x}.jpg"
-                                    print(url2)
-                                    executor.submit(download, url2, x)
 
-                        with ZipFile(f"Download/{title}.zip", "w") as zip:
-                            print("Zipping...")
-                            for file in os.listdir(f"./{title}/"):
-                                zip.write(f"{title}/{file}")
-                            print("Zipping done")
-                            shutil.rmtree(f'./{title}/')
-                        msg = QtWidgets.QMessageBox(self.tabs)
-                        msg.setWindowTitle("Download Finished")
-                        msg.setText(f'You can find\n"{title}.zip"\nin the "Download" folder.')
-                        msg.exec_()
+                    try:
+                        tag_result = soup.find_all('ul', attrs={'class': 'tags'})
+                        if tag_result != []:
+                            tag_res = tag_result[0]
+                            tags_raw = tag_res.find_all('a', attrs={'class': 'tag_btn'})
+                            for tag_raw in tags_raw:
+                                try:
+                                    split_tag = tag_raw.find("span", attrs={"class": "split_tag"}).text
+                                except:
+                                    split_tag = ''
+                                tag = tag_raw.text[:-len(tag_raw.find("span", attrs={"class": "t_badge"}).text)][
+                                      :-1].replace(split_tag, '')
+                                if int(tag_raw.find("span", attrs={'class': 't_badge'}).text) > 100:
+                                    tags_list.append(f"('{x}','{tag}')")
 
-        def add_bookmark(self):
-            url = self.tabs.currentWidget().url().url()
-            c.execute(f"SELECT * FROM bookmarks WHERE url='{url}'")
-            if len(c.fetchall()) < 1:
-                c.execute(
-                    f"INSERT INTO bookmarks VALUES ('{url}','{self.tabs.currentWidget().page().title().replace('Free Hentai Manga, Doujinshi and Anime Porn','Home').replace(' - HentaiFox','').replace(' - Hentai Galleries','').replace('Free Hentai Manga and Doujinshi','Overview')}')")
-                conn.commit()
-                self.refresh_bookmarks(mode="remove")
+                        par_result = soup.find_all('ul', attrs={'class': 'parodies'})
+                        if par_result != []:
+                            par_res = par_result[0]
+                            pars_raw = par_res.find_all('a', attrs={'class': 'tag_btn'})
+                            for par_raw in pars_raw:
+                                try:
+                                    split_tag = par_raw.find("span", attrs={"class": "split_tag"}).text
+                                except:
+                                    split_tag = ''
+                                par = par_raw.text[:-len(par_raw.find("span", attrs={"class": "t_badge"}).text)][
+                                      :-1].replace(split_tag, '')
+                                if int(par_raw.find("span", attrs={'class': 't_badge'}).text) > 1:
+                                    parodies_list.append(f"('{x}','{par}')")
 
-        def remove_bookmark(self):
-            url = self.tabs.currentWidget().url().url()
-            c.execute(f"SELECT * FROM bookmarks WHERE url='{url}'")
-            if len(c.fetchall()) > 0:
-                c.execute(f"DELETE FROM bookmarks WHERE url='{url}'")
-                conn.commit()
-                self.refresh_bookmarks(mode="add")
+                        char_result = soup.find_all('ul', attrs={'class': 'characters'})
+                        if char_result != []:
+                            char_res = char_result[0]
+                            chars_raw = char_res.find_all('a', attrs={'class': 'tag_btn'})
+                            for char_raw in chars_raw:
+                                try:
+                                    split_tag = char_raw.find("span", attrs={"class": "split_tag"}).text
+                                except:
+                                    split_tag = ''
+                                char = char_raw.text[:-len(char_raw.find("span", attrs={"class": "t_badge"}).text)][
+                                       :-1].replace(split_tag, '')
+                                if int(char_raw.find("span", attrs={'class': 't_badge'}).text) > 1:
+                                    characters_list.append(f"('{x}','{char}')")
 
-        def refresh_bookmarks(self, mode=None):
-            url = self.tabs.currentWidget().url().url()
+                        art_result = soup.find_all('ul', attrs={'class': 'artists'})
+                        if art_result != []:
+                            art_res = art_result[0]
+                            arts_raw = art_res.find_all('a', attrs={'class': 'tag_btn'})
+                            for art_raw in arts_raw:
+                                try:
+                                    split_tag = art_raw.find("span", attrs={"class": "split_tag"}).text
+                                except:
+                                    split_tag = ''
+                                art = art_raw.text[:-len(art_raw.find("span", attrs={"class": "t_badge"}).text)][
+                                      :-1].replace(split_tag, '')
+                                if int(art_raw.find("span", attrs={'class': 't_badge'}).text) > 1:
+                                    artists_list.append(f"('{x}','{art}')")
 
-            bookmarks = []
-            c.execute("SELECT * FROM bookmarks WHERE true")
-            for tu in c.fetchall():
-                bookmarks.append(tu)
+                        grp_result = soup.find_all('ul', attrs={'class': 'groups'})
+                        if grp_result != []:
+                            grp_res = grp_result[0]
+                            grps_raw = grp_res.find_all('a', attrs={'class': 'tag_btn'})
+                            for grp_raw in grps_raw:
+                                try:
+                                    split_tag = grp_raw.find("span", attrs={"class": "split_tag"}).text
+                                except:
+                                    split_tag = ''
+                                grp = grp_raw.text[:-len(grp_raw.find("span", attrs={"class": "t_badge"}).text)][
+                                      :-1].replace(split_tag, '')
+                                if int(grp_raw.find("span", attrs={'class': 't_badge'}).text) > 1:
+                                    groups_list.append(f"('{x}','{grp}')")
 
-            if mode == None:
-                c.execute(f"SELECT * FROM bookmarks WHERE url='{url}'")
-                if len(c.fetchall()) > 0:
-                    mode = "remove"
-                elif len(c.fetchall()) < 1:
-                    mode = "add"
-            if mode == "remove":
-                self.bookmark.setIcon(QIcon("icons/BookmarkSet.png"))
-                self.bookmarkMenu.clear()
-                self.bookmarkMenu.addAction(QIcon("icons/remove_Bookmark.png"), "Remove Bookmark", self.remove_bookmark,
-                                            QKeySequence("Ctrl+D"))
-                self.bookmarkMenu.addSeparator()
-                for bookmark in bookmarks:
-                    self.bookmarkMenu.addAction(f"{bookmark[1]}",
-                                                lambda bookmark_url=bookmark[0]: self.load_bookmark(bookmark_url))
-            elif mode == "add":
-                self.bookmark.setIcon(QIcon("icons/Bookmark.png"))
-                self.bookmarkMenu.clear()
-                self.bookmarkMenu.addAction(QIcon("icons/add_Bookmark.png"), "Add Bookmark", self.add_bookmark,
-                                            QKeySequence("Ctrl+D"))
-                self.bookmarkMenu.addSeparator()
-                for bookmark in bookmarks:
-                    self.bookmarkMenu.addAction(f"{bookmark[1]}",
-                                                lambda bookmark_url=bookmark[0]: self.load_bookmark(bookmark_url))
+                        cat_result = soup.find_all('ul', attrs={'class': 'categories'})
+                        if cat_result != []:
+                            cat_res = cat_result[0]
+                            cats_raw = cat_res.find_all('a', attrs={'class': 'tag_btn'})
+                            for cat_raw in cats_raw:
+                                try:
+                                    split_tag = cat_raw.find("span", attrs={"class": "split_tag"}).text
+                                except:
+                                    split_tag = ''
+                                cat = cat_raw.text[:-len(cat_raw.find("span", attrs={"class": "t_badge"}).text)][
+                                      :-1].replace(split_tag, '')
+                                if int(cat_raw.find("span", attrs={'class': 't_badge'}).text) > 1:
+                                    categories_list.append(f"('{x}','{cat}')")
 
-        def load_bookmark(self, bookmark_url):
-            self.tabs.currentWidget().load(QUrl(bookmark_url))
-
-        def update_tab_count(self):
-            lenght = self.tabs.count()
-            self.tabsMenu.clear()
-            for x in range(lenght):
-                if x <= 8:
-                    i = x + 1
-                    self.tabsMenu.addAction(f"Switch to Tab {i}", lambda x=x: self.tabs.setCurrentIndex(x),
-                                            QKeySequence(f"Ctrl+{i}"))
-
-        def copy_url(self):
-            url = self.tabs.currentWidget().url().url()
-            pyperclip.copy(url)
-
-        def link_hovered(self, url):
-            if len(url) > 150:
-                url = url[:100] + "..."
-            if url != "":
-                p = self.browse.geometry().bottomLeft() + QPoint(12, -33)
-                self.hover_url.move(p)
-                self.hover_url.raise_()
-                self.hover_url.setText(url)
-                self.hover_url.adjustSize()
-                self.hover_url.show()
-            else:
-                self.hover_url.hide()
-                self.tag_info_overlay.hide()
-
-            c.execute("SELECT value FROM settings WHERE setting='tag_info_setting'")
-            tag_info_setting = c.fetchone()[0]
-            if tag_info_setting == 1:
-                if url.startswith("https://hentaifox.com/tag/"):
-                    c.execute(f"SELECT * FROM taginformation WHERE url='{url}'")
-                    tu = c.fetchone()
-                    if tu != None:
-                        tag = tu[0]
-                        galleries = tu[1]
-                        wiki_description = tu[2]
-                        if len(wiki_description) > 180:
-                            positions = ([pos for pos, char in enumerate(wiki_description) if char == " "])
-                            postition = min(positions, key=lambda x: abs(x - 170))
-                            print(postition)
-                            wiki_description = f"{wiki_description[:postition]}\n{wiki_description[postition:]}"
-
-                        info = f"{tag}:\n{wiki_description}\nReal amount of Galleries: {galleries}"
-                    else:
-                        info = "Currently Unavalible"
-
-                    self.tag_info_overlay.raise_()
-                    self.tag_info_overlay.setText(info)
-                    self.tag_info_overlay.adjustSize()
-                    p = self.tabs.geometry().bottomRight() - QPoint(
-                        int(self.tabs.geometry().width() / 2 + (self.tag_info_overlay.geometry().width() / 2)),
-                        int(self.tag_info_overlay.geometry().height() + 30))
-                    self.tag_info_overlay.move(p)
-                    self.tag_info_overlay.show()
-
-        def deactivate_taginformation(self):
-            c.execute("UPDATE settings SET value = '0' WHERE setting ='tag_info_setting'")
-            conn.commit()
-            self.create_menu()
-
-        def activate_taginformation(self):
-            c.execute("UPDATE settings SET value = '1' WHERE setting = 'tag_info_setting'")
-            conn.commit()
-            self.create_menu()
-
-        def deactivate_tabswitching(self):
-            c.execute("UPDATE settings SET value = '0' WHERE setting ='switch_tabs_setting'")
-            conn.commit()
-            self.create_menu()
-
-        def activate_tabswitching(self):
-            c.execute("UPDATE settings SET value = '1' WHERE setting = 'switch_tabs_setting'")
-            conn.commit()
-            self.create_menu()
-
-        def create_menu(self):
-            c.execute("SELECT value FROM settings WHERE setting='tag_info_setting'")
-            tag_info_setting = int(c.fetchone()[0])
-            c.execute("SELECT value FROM settings WHERE setting='switch_tabs_setting'")
-            switch_tabs_setting = int(c.fetchone()[0])
-
-            self.browserMenu.clear()
-            self.browserMenu.addAction(QIcon("icons/Back_Arrow.png"), "Back", lambda: self.tabs.currentWidget().back(),
-                                       QKeySequence("Ctrl+Left"))
-            self.browserMenu.addAction(QIcon("icons/Forward_Arrow.png"), "Forward",
-                                       lambda: self.tabs.currentWidget().forward(), QKeySequence("Ctrl+Right"))
-            self.browserMenu.addAction(QIcon("icons/Reload_Arrow.png"), "Reload",
-                                       lambda: self.tabs.currentWidget().reload(), QKeySequence("Ctrl+R"))
-            self.browserMenu.addAction(QIcon("icons/Home-icon.png"), "Home", self.navigate_home, QKeySequence("Ctrl+H"))
-            self.browserMenu.addSeparator()
-            self.browserMenu.addAction(QIcon("icons/add_tab.png"), "New Tab", self.add_new_tab, QKeySequence("Ctrl+T"))
-            self.browserMenu.addAction(QIcon("icons/remove_tab.png"), "Close Tab",
-                                       lambda i=self.tabs.currentIndex(): self.close_current_tab(i),
-                                       QKeySequence("Ctrl+W"))
-            self.tabsMenu = self.browserMenu.addMenu(QIcon("icons/tab.png"), "Navigate Tabs")
-            self.tabsMenu.addAction("Switch to Tab 1", lambda: self.tabs.setCurrentIndex(0), QKeySequence("Ctrl+1"))
-            self.browserMenu.addSeparator()
-            self.browserMenu.addAction(QIcon("icons/zoom_in.png"), "Zoom in by 10%",
-                                       lambda value=0.1: self.zoom_browser2(value=value), QKeySequence("Ctrl++"))
-            self.browserMenu.addAction(QIcon("icons/zoom_out.png"), "Zoom out by 10%",
-                                       lambda value=-0.1: self.zoom_browser2(value=value), QKeySequence("Ctrl+-"))
-            self.browserMenu.addAction(QIcon("icons/zoom.png"), "Reset Zoom to 100%", self.reset_zoom,
-                                       QKeySequence("Ctrl+0"))
-            self.browserMenu.addSeparator()
-            self.browserMenu.addAction(QIcon("icons/download.png"), "Download current Gallery", self.download,
-                                       QKeySequence("Ctrl+S"))
-            self.browserMenu.addAction(QIcon("icons/copy.png"), "Copy page URL to clipboard", self.copy_url,
-                                       QKeySequence("Ctrl+Shift+C"))
-            self.browserMenu.addSeparator()
-            self.settingsMenu = self.browserMenu.addMenu(QIcon("icons/setting_icon.png"), "Settings")
-
-            if tag_info_setting == 0:
-                self.settingsMenu.addAction(QIcon("icons/checkbox_empty.png"), "Display Taginformation on hover",
-                                            self.activate_taginformation)
-            elif tag_info_setting == 1:
-                self.settingsMenu.addAction(QIcon("icons/checkbox_checked.png"), "Display Taginformation on hover",
-                                            self.deactivate_taginformation)
-
-            if switch_tabs_setting == 0:
-                self.settingsMenu.addAction(QIcon("icons/checkbox_empty.png"), "Autoswitch to new Tab when opening",
-                                            self.activate_tabswitching)
-            if switch_tabs_setting == 1:
-                self.settingsMenu.addAction(QIcon("icons/checkbox_checked.png"), "Autoswitch to new Tab when opening",
-                                            self.deactivate_tabswitching)
-            self.menu_button.setMenu(self.browserMenu)
-    # ---------multi-search-functions-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    if True:
-        def update_taglist(self):
-            self.criterialist.clear()
-            if self.choosetype.currentText() == "tags":
-                for abc in item_list["tags"]:
-                    self.criterialist.addItem(f"{abc}")
-            if self.choosetype.currentText() == "parodies":
-                for abc in item_list["parodies"]:
-                    self.criterialist.addItem(f"{abc}")
-            if self.choosetype.currentText() == "characters":
-                for abc in item_list["characters"]:
-                    self.criterialist.addItem(f"{abc}")
-            if self.choosetype.currentText() == "artists":
-                for abc in item_list["artists"]:
-                    self.criterialist.addItem(f"{abc}")
-            if self.choosetype.currentText() == "groups":
-                for abc in item_list["groups"]:
-                    self.criterialist.addItem(f"{abc}")
-            if self.choosetype.currentText() == "categories":
-                for abc in item_list["categories"]:
-                    self.criterialist.addItem(f"{abc}")
-
-        def whitelist_add(self):
-            current = self.criterialist.currentItem()
-            if current != None:
-                type = self.choosetype.currentText()
-                item = self.criterialist.takeItem(self.criterialist.row(self.criterialist.currentItem()))
-                self.whitelist.addItem(f"{item.text()} ({type})")
-                white_list[self.choosetype.currentText()].append(item.text())
-                item_list[self.choosetype.currentText()].remove(item.text())
-
-        def whitelist_remove(self):
-            current = self.whitelist.currentItem()
-            if current != None:
-                item_raw = self.whitelist.takeItem(self.whitelist.row(self.whitelist.currentItem()))
-                item_name = item_raw.text()[:item_raw.text().find(" (")]
-                item_type = item_raw.text()[item_raw.text().find("(") + 1:item_raw.text().find(")")]
-                white_list[item_type].remove(item_name)
-                item_list[item_type].append(item_name)
-                item_list[item_type].sort()
-                self.update_taglist()
-
-        def blacklist_add(self):
-            current = self.criterialist.currentItem()
-            if current != None:
-                type = self.choosetype.currentText()
-                item = self.criterialist.takeItem(self.criterialist.row(self.criterialist.currentItem()))
-                self.blacklist.addItem(f"{item.text()} ({type})")
-                black_list[self.choosetype.currentText()].append(item.text())
-                item_list[self.choosetype.currentText()].remove(item.text())
-
-        def blacklist_remove(self):
-            current = self.blacklist.currentItem()
-            if current != None:
-                item_raw = self.blacklist.takeItem(self.blacklist.row(self.blacklist.currentItem()))
-                item_name = item_raw.text()[:item_raw.text().find(" (")]
-                item_type = item_raw.text()[item_raw.text().find("(") + 1:item_raw.text().find(")")]
-                black_list[item_type].remove(item_name)
-                item_list[item_type].append(item_name)
-                item_list[item_type].sort()
-                self.update_taglist()
-
-        def update_gallerycounter(self, abc, type):
-            if self.check_loadfacts.isChecked() == False:
-                typex = type_converter(type)
-                try:
-                    c.execute(f"SELECT * FROM {typex}information WHERE tag='{abc}'")
-                    tu = c.fetchone()
-                    count = int(tu[1])
-                    self.pagecount.display(count)
-                    percentage = int(count) / int(latest_gallery)
-                    self.percentagecount.setValue(int(percentage * 100))
-                    text = ""
-                    if tu[2] != 'None':
-                        text = text + f"{tu[2]}\nby EHwiki"
-                    if tu[3] != 'None':
-                        text = text + f"\n\n{tu[3]}"
-                    if text == "":
-                        text = "No description written yet.\nIf you want to add a description for this tag, please contact me on Discord:\nN. J\u00e4cha#1707"
-
-                    self.describtion.setText(text)
-
-                except:
-                    print("Error while loading the description or gallery-counter")
-
-        def criterialist_update_gallerycounter(self):
-            current_abc = self.criterialist.currentItem().text()
-            current_type = self.choosetype.currentText()
-            self.update_gallerycounter(abc=current_abc, type=current_type)
-
-        def whitelist_update_gallerycounter(self):
-            current_abc = self.whitelist.currentItem().text()[:self.whitelist.currentItem().text().find(" (")]
-            current_type = self.whitelist.currentItem().text()[
-                           self.whitelist.currentItem().text().find("(") + 1:self.whitelist.currentItem().text().find(
-                               ")")]
-            self.update_gallerycounter(abc=current_abc, type=current_type)
-
-        def blacklist_update_gallerycounter(self):
-            current_abc = self.blacklist.currentItem().text()[:self.blacklist.currentItem().text().find(" (")]
-            current_type = self.blacklist.currentItem().text()[
-                           self.blacklist.currentItem().text().find("(") + 1:self.blacklist.currentItem().text().find(
-                               ")")]
-            self.update_gallerycounter(abc=current_abc, type=current_type)
-
-        def opentaginbrowser(self, type, abc):
-            type = type_converter(type)
-            abc = abc.replace(" ", "-")  # .replace(".","")
-            if abc.endswith("-"):
-                abc = abc[:-1]
-            if self.check_internal.isChecked() == True:
-                qurl = QtCore.QUrl(f"https://hentaifox.com/{type}/{abc}/")
-                self.tabWidget.setCurrentIndex(0)
-                self.add_new_tab(qurl, label="loading...")
-            elif self.check_external.isChecked() == True:
-                os.system(f"start https://hentaifox.com/{type}/{abc}/")
-
-        def criterialist_opentaginbrowser(self):
-            current_abc = self.criterialist.currentItem().text()
-            current_type = self.choosetype.currentText()
-            self.opentaginbrowser(abc=current_abc, type=current_type)
-
-        def whitelist_opentaginbrowser(self):
-            current_abc = self.whitelist.currentItem().text()[:self.whitelist.currentItem().text().find(" (")]
-            current_type = self.whitelist.currentItem().text()[
-                           self.whitelist.currentItem().text().find("(") + 1:self.whitelist.currentItem().text().find(
-                               ")")]
-            self.opentaginbrowser(abc=current_abc, type=current_type)
-
-        def blacklist_opentaginbrowser(self):
-            current_abc = self.blacklist.currentItem().text()[:self.blacklist.currentItem().text().find(" (")]
-            current_type = self.blacklist.currentItem().text()[
-                           self.blacklist.currentItem().text().find("(") + 1:self.blacklist.currentItem().text().find(
-                               ")")]
-            self.opentaginbrowser(abc=current_abc, type=current_type)
-
-        def multi_search(self):
-            if self.whitelist.count() > 0:
-                start_time = time.time()
-                filename = ""
-                connection = ""
-                for list_ in white_list.values():
-                    for tag in list_:
-                        filename = filename + connection + f"{tag}"
-                        connection = "-"
-                connection = "!"
-                for list_ in black_list.values():
-                    for tag in list_:
-                        filename = filename + connection + f"{tag}"
-                filename = filename.replace(" ", "_")
-                whitelist = []
-                blacklist = []
-
-                string = f"SELECT DISTINCT gal FROM galleryinformation WHERE true "
-                for type, list_ in white_list.items():
-                    if len(list_) > 0:
-                        for tag in white_list[type]:
-                            string = string + f"AND gal IN (SELECT gal FROM gallery{type} WHERE tag='{tag}') "
-                c.execute(f"{string}")
-                result = c.fetchall()
-                for tu in result:
-                    whitelist.append(tu[0])
-
-                for type, list_ in black_list.items():
-                    if len(list_) > 0:
-                        string = f"SELECT DISTINCT gal FROM galleryinformation WHERE true"
-                        for type, list_ in black_list.items():
-                            if len(list_) > 0:
-                                connection = " AND "
-                                for tag in black_list[type]:
-                                    string = string + connection + f"gal IN (SELECT gal FROM gallery{type} WHERE tag='{tag}')"
-                                    connection = " OR "
-                        print(string)
-                        c.execute(f"{string}")
-                        result = c.fetchall()
-                        for tu in result:
-                            blacklist.append(tu[0])
-                        break
-
-                whitelist.sort()
-                blacklist.sort()
-                if len(blacklist) > 0:
-                    results = list(set(whitelist) - set(blacklist))
+                        pages_raw = soup.find("span", attrs={"class": "i_text pages"}).text
+                        pages = pages_raw[pages_raw.find(": ") + 2:]
+                        title = soup.find('title').text.replace("- HentaiFox", "").replace("'", "''")
+                        image_raw = str(soup.find("div", attrs={'class': "cover"}))
+                        image = image_raw[image_raw.find("src=") + 5:image_raw.find('"/>')]
+                        informations_list.append(f"('{x}','{title}','{pages}','{image}')")
+                    except:
+                        with open("error.txt", "a") as f:
+                            f.write(f"Error with {x}\n")
+                            f.close()
+                        if x in tags_list:
+                            tags_list.remove(x)
+                        if x in parodies_list:
+                            parodies_list.remove(x)
+                        if x in characters_list:
+                            characters_list.remove(x)
+                        if x in artists_list:
+                            artists_list.remove(x)
+                        if x in groups_list:
+                            groups_list.remove(x)
+                        if x in categories_list:
+                            categories_list.remove(x)
+                        if x in informations_list:
+                            informations_list.remove(x)
                 else:
-                    results = list(whitelist)
-                results.sort()
+                    print(f"Error: 404 at {x}")
+                    gaps.append(f"{x}\n")
+                return f"Done ({x})"
 
-                if len(results) > 0:
-                    with open(f"Results (TXT)/{filename}.txt", "w+") as t:
-                        for gallery in results:
-                            t.write(f"https://hentaifox.com/gallery/{gallery}/\n")
-                    with open(f"Results (JSON)/{filename}.result", "w") as j:
-                        data = []
-                        for gallery in results:
-                            data.append(gallery)
-                        json.dump(data, j, indent=4)
-                    self.label.setText(
-                        f'Found {len(results)} galleries. You can find "{filename}.txt" in the "Results (TXT)" folder and "{filename}.result" in the "Results (JSON)" folder.')
-                else:
-                    self.label.setText(f'Sorry no results for the combination {filename}.')
-                duration = time.time() - start_time
-                self.diagnostics.setText(
-                    f"Search Diagnostics:\n\nGalleries found: {len(results)}\nDuration: {duration} seconds")
-                print(f"Multisearch finished | File: {filename}.txt/result")
-
-        def internal_toggled(self):
-            self.check_external.setChecked(False)
-
-        def external_toggled(self):
-            self.check_internal.setChecked(False)
-
-        def reorder_itemlist(self, feature, up_down):
-            for type in types:
-                typex = type_converter(type)
-                item_list[type] = []
-                c.execute(f"SELECT DISTINCT tag FROM {typex}information WHERE true ORDER BY {feature} {up_down}")
-                for tu in c.fetchall():
-                    item_list[type].append(tu[0])
-
-                for item in white_list[type]:
-                    item_list[type].remove(item)
-                for item in black_list[type]:
-                    item_list[type].remove(item)
-                self.update_taglist()
-
-        def name_toggled(self):
-            self.Sort_Count.setChecked(False)
-            self.reorder_taglist()
-
-        def count_toggled(self):
-            self.Sort_Name.setChecked(False)
-            self.reorder_taglist()
-
-        def asc_toggled(self):
-            self.Sort_DESC.setChecked(False)
-            self.reorder_taglist()
-
-        def desc_toggled(self):
-            self.Sort_ASC.setChecked(False)
-            self.reorder_taglist()
-
-        def reorder_taglist(self):
-            if self.Sort_ASC.isChecked() == True:
-                up_down = "ASC"
-            elif self.Sort_DESC.isChecked() == True:
-                up_down = "DESC"
-            if self.Sort_Name.isChecked() == True:
-                feature = "tag"
-            elif self.Sort_Count.isChecked() == True:
-                feature = "galleries"
-            self.reorder_itemlist(feature, up_down)
-    # ---------update-functions-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    if True:
-        def update_start(self):
-            self.start.setText(f"Start searching for gaps and updates at: {self.startslider.value()}")
-
-        def update_stop(self):
-            self.stop.setText(f"Stop searching for gaps and updates at: {self.stopslider.value()}")
-
-        def update_datamap(self):
-            if self.stopslider.value() > self.startslider.value():
-                msg = QtWidgets.QMessageBox()
-                msg.setWindowTitle("UPDATE")
-                msg.setText(f"About to update the database.\nThis may take a while.\nFor progress look at the console.")
-                x = msg.exec_()
-
-                start_id = self.startslider.value()
-                y = self.stopslider.value()
-
-                found = []
-                not_found = []
-
-                c.execute(f"SELECT gal FROM galleryinformation WHERE true ORDER BY gal")
-                for tu in c.fetchall():
-                    found.append(tu[0])
-
-                not_found = list(set(range(start_id, int(y + 1))) - set(found))
-                not_found.sort()
-
-                print("scraping missing galleries...")
-
-                gaps = []
-                tags_list = []
-                parodies_list = []
-                characters_list = []
-                artists_list = []
-                groups_list = []
-                categories_list = []
-                informations_list = []
-
-                def fetch(x):
-                    web = requests.get(f"https://hentaifox.com/gallery/{x}/")
-                    print(f"Request finished ({x})")
-                    html = web.text
-                    soup = BeautifulSoup(html, 'html.parser')
-                    okay = soup.find('title')
-                    if str(okay) != "<title>404 Not Found - HentaiFox</title>":
-
-                        try:
-                            tag_result = soup.find_all('ul', attrs={'class': 'tags'})
-                            if tag_result != []:
-                                tag_res = tag_result[0]
-                                tags_raw = tag_res.find_all('a', attrs={'class': 'tag_btn'})
-                                for tag_raw in tags_raw:
-                                    try:
-                                        split_tag = tag_raw.find("span", attrs={"class": "split_tag"}).text
-                                    except:
-                                        split_tag = ''
-                                    tag = tag_raw.text[:-len(tag_raw.find("span", attrs={"class": "t_badge"}).text)][
-                                          :-1].replace(split_tag, '')
-                                    if int(tag_raw.find("span", attrs={'class': 't_badge'}).text) > 100:
-                                        tags_list.append(f"('{x}','{tag}')")
-
-                            par_result = soup.find_all('ul', attrs={'class': 'parodies'})
-                            if par_result != []:
-                                par_res = par_result[0]
-                                pars_raw = par_res.find_all('a', attrs={'class': 'tag_btn'})
-                                for par_raw in pars_raw:
-                                    try:
-                                        split_tag = par_raw.find("span", attrs={"class": "split_tag"}).text
-                                    except:
-                                        split_tag = ''
-                                    par = par_raw.text[:-len(par_raw.find("span", attrs={"class": "t_badge"}).text)][
-                                          :-1].replace(split_tag, '')
-                                    if int(par_raw.find("span", attrs={'class': 't_badge'}).text) > 1:
-                                        parodies_list.append(f"('{x}','{par}')")
-
-                            char_result = soup.find_all('ul', attrs={'class': 'characters'})
-                            if char_result != []:
-                                char_res = char_result[0]
-                                chars_raw = char_res.find_all('a', attrs={'class': 'tag_btn'})
-                                for char_raw in chars_raw:
-                                    try:
-                                        split_tag = char_raw.find("span", attrs={"class": "split_tag"}).text
-                                    except:
-                                        split_tag = ''
-                                    char = char_raw.text[:-len(char_raw.find("span", attrs={"class": "t_badge"}).text)][
-                                           :-1].replace(split_tag, '')
-                                    if int(char_raw.find("span", attrs={'class': 't_badge'}).text) > 1:
-                                        characters_list.append(f"('{x}','{char}')")
-
-                            art_result = soup.find_all('ul', attrs={'class': 'artists'})
-                            if art_result != []:
-                                art_res = art_result[0]
-                                arts_raw = art_res.find_all('a', attrs={'class': 'tag_btn'})
-                                for art_raw in arts_raw:
-                                    try:
-                                        split_tag = art_raw.find("span", attrs={"class": "split_tag"}).text
-                                    except:
-                                        split_tag = ''
-                                    art = art_raw.text[:-len(art_raw.find("span", attrs={"class": "t_badge"}).text)][
-                                          :-1].replace(split_tag, '')
-                                    if int(art_raw.find("span", attrs={'class': 't_badge'}).text) > 1:
-                                        artists_list.append(f"('{x}','{art}')")
-
-                            grp_result = soup.find_all('ul', attrs={'class': 'groups'})
-                            if grp_result != []:
-                                grp_res = grp_result[0]
-                                grps_raw = grp_res.find_all('a', attrs={'class': 'tag_btn'})
-                                for grp_raw in grps_raw:
-                                    try:
-                                        split_tag = grp_raw.find("span", attrs={"class": "split_tag"}).text
-                                    except:
-                                        split_tag = ''
-                                    grp = grp_raw.text[:-len(grp_raw.find("span", attrs={"class": "t_badge"}).text)][
-                                          :-1].replace(split_tag, '')
-                                    if int(grp_raw.find("span", attrs={'class': 't_badge'}).text) > 1:
-                                        groups_list.append(f"('{x}','{grp}')")
-
-                            cat_result = soup.find_all('ul', attrs={'class': 'categories'})
-                            if cat_result != []:
-                                cat_res = cat_result[0]
-                                cats_raw = cat_res.find_all('a', attrs={'class': 'tag_btn'})
-                                for cat_raw in cats_raw:
-                                    try:
-                                        split_tag = cat_raw.find("span", attrs={"class": "split_tag"}).text
-                                    except:
-                                        split_tag = ''
-                                    cat = cat_raw.text[:-len(cat_raw.find("span", attrs={"class": "t_badge"}).text)][
-                                          :-1].replace(split_tag, '')
-                                    if int(cat_raw.find("span", attrs={'class': 't_badge'}).text) > 1:
-                                        categories_list.append(f"('{x}','{cat}')")
-
-                            pages_raw = soup.find("span", attrs={"class": "i_text pages"}).text
-                            pages = pages_raw[pages_raw.find(": ") + 2:]
-                            title = soup.find('title').text.replace("- HentaiFox", "").replace("'", "''")
-                            image_raw = str(soup.find("div", attrs={'class': "cover"}))
-                            image = image_raw[image_raw.find("src=") + 5:image_raw.find('"/>')]
-                            informations_list.append(f"('{x}','{title}','{pages}','{image}')")
-                        except:
-                            with open("error.txt", "a") as f:
-                                f.write(f"Error with {x}\n")
-                                f.close()
-                            if x in tags_list:
-                                tags_list.remove(x)
-                            if x in parodies_list:
-                                parodies_list.remove(x)
-                            if x in characters_list:
-                                characters_list.remove(x)
-                            if x in artists_list:
-                                artists_list.remove(x)
-                            if x in groups_list:
-                                groups_list.remove(x)
-                            if x in categories_list:
-                                categories_list.remove(x)
-                            if x in informations_list:
-                                informations_list.remove(x)
-                    else:
-                        print(f"Error: 404 at {x}")
-                        gaps.append(f"{x}\n")
-                    return f"Done ({x})"
-
-                def save():
-                    if len(tags_list) > 0:
-                        print("saving tags_list")
-                        string = "INSERT INTO gallerytags VALUES "
-                        comma = ""
-                        tags_list_copy = list(tags_list)
-                        tags_list.clear()
-                        for tu in tags_list_copy:
-                            string = string + comma + tu
-                            comma = ", "
-                        c.execute(string)
-                        conn.commit()
-
-                    if len(parodies_list) > 0:
-                        print("saving parodies_list")
-                        string = "INSERT INTO galleryparodies VALUES "
-                        comma = ""
-                        parodies_list_copy = list(parodies_list)
-                        parodies_list.clear()
-                        for tu in parodies_list_copy:
-                            string = string + comma + tu
-                            comma = ", "
-                        c.execute(string)
-                        conn.commit()
-
-                    if len(characters_list) > 0:
-                        print("saving characters_list")
-                        string = "INSERT INTO gallerycharacters VALUES "
-                        comma = ""
-                        characters_list_copy = list(characters_list)
-                        characters_list.clear()
-                        for tu in characters_list_copy:
-                            string = string + comma + tu
-                            comma = ", "
-                        c.execute(string)
-                        conn.commit()
-
-                    if len(artists_list) > 0:
-                        print("saving artists_list")
-                        string = "INSERT INTO galleryartists VALUES "
-                        comma = ""
-                        artists_list_copy = list(artists_list)
-                        artists_list.clear()
-                        for tu in artists_list_copy:
-                            string = string + comma + tu
-                            comma = ", "
-                        c.execute(string)
-                        conn.commit()
-
-                    if len(groups_list) > 0:
-                        print("saving groups_list")
-                        string = "INSERT INTO gallerygroups VALUES "
-                        comma = ""
-                        groups_list_copy = list(groups_list)
-                        groups_list.clear()
-                        for tu in groups_list_copy:
-                            string = string + comma + tu
-                            comma = ", "
-                        c.execute(string)
-                        conn.commit()
-
-                    if len(categories_list) > 0:
-                        print("saving categories_list")
-                        string = "INSERT INTO gallerycategories VALUES "
-                        comma = ""
-                        categories_list_copy = list(categories_list)
-                        categories_list.clear()
-                        for tu in categories_list_copy:
-                            string = string + comma + tu
-                            comma = ", "
-                        c.execute(string)
-                        conn.commit()
-
-                    if len(informations_list) > 0:
-                        print("saving informations_list")
-                        string = "INSERT INTO galleryinformation VALUES "
-                        comma = ""
-                        informations_list_copy = list(informations_list)
-                        informations_list.clear()
-                        for tu in informations_list_copy:
-                            string = string + comma + tu
-                            comma = ", "
-                        c.execute(string)
-                        conn.commit()
-
-                with concurrent.futures.ThreadPoolExecutor() as executor:
-                    results = [executor.submit(fetch, x) for x in not_found]
-                    z = 0
-                    for f in concurrent.futures.as_completed(results):
-                        print(f.result())
-                        z += 1
-                        if z % 1000 == 0:
-                            save()
-                    save()
-
-                with open("404.txt", "a") as f:
-                    print("writing gaps into 404.txt")
-                    for gal in gaps:
-                        f.write(str(gal))
-
-                stuff = {}
-                stuff2 = {}
-
-                for type in types:
-                    typex = type_converter(type)
-                    stuff[typex] = []
-                    stuff2[typex] = []
-                    c.execute(f"SELECT DISTINCT tag FROM gallery{type} WHERE true ORDER BY tag ASC")
-                    for tu in c.fetchall():
-                        stuff2[typex].append(tu[0])
-                        string = f"SELECT DISTINCT gal FROM gallery{type} WHERE tag='{tu[0]}'"
-                        c.execute(string)
-                        lenght = len(c.fetchall())
-                        stuff[typex].append(f"""WHEN '{tu[0]}' THEN '{lenght}'""")
-                        print(f"Counting Galleries: {type}/{tu[0]} -- {lenght} ")
-
-                for type in types:
-                    typex = type_converter(type)
-                    string = f"UPDATE {typex}information SET galleries= CASE tag "
-                    string2 = f"END WHERE tag IN {tuple(stuff2[typex])}"
-                    print(f"constructing Query for {type}")
-                    for string_ in stuff[typex]:
-                        string = string + string_
-                    string = string + string2
+            def save():
+                if len(tags_list) > 0:
+                    print("saving tags_list")
+                    string = "INSERT INTO gallerytags VALUES "
+                    comma = ""
+                    tags_list_copy = list(tags_list)
+                    tags_list.clear()
+                    for tu in tags_list_copy:
+                        string = string + comma + tu
+                        comma = ", "
                     c.execute(string)
                     conn.commit()
-                    print(f"commited Changes for {type}")
-                print("finished updating the database")
-                msg = QtWidgets.QMessageBox()
-                msg.setWindowTitle("Finished")
-                msg.setText(f"Datamap up to date.\nWrote URLs of gaps into 404.txt\n")
-                x = msg.exec_()
-    # ---------result-functions-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    if True:
-        def load_result_filelist(self):
-            self.filebrowser.clear()
-            if self.tabWidget.currentIndex() == 2:
-                for file in os.listdir("./Results (JSON)/"):
-                    if file.endswith(".result"):
-                        self.filebrowser.addItem(file)
 
-        def load_results(self):
-            result_view_list.clear()
-            self.resultlist.clear()
-            if self.filebrowser.currentItem() != None:
-                result_file = self.filebrowser.currentItem().text()
-                with open(f"Results (JSON)/{result_file}", "r") as f:
-                    data = json.load(f)
-                    for gallery in data:
-                        result_view_list.append(gallery)
-            self.display_results()
+                if len(parodies_list) > 0:
+                    print("saving parodies_list")
+                    string = "INSERT INTO galleryparodies VALUES "
+                    comma = ""
+                    parodies_list_copy = list(parodies_list)
+                    parodies_list.clear()
+                    for tu in parodies_list_copy:
+                        string = string + comma + tu
+                        comma = ", "
+                    c.execute(string)
+                    conn.commit()
 
-        def display_results(self):
-            self.resultlist.clear()
-            if self.SortR_TITLE.isChecked() == True:
-                feature = "title"
-            elif self.SortR_PAGES.isChecked() == True:
-                feature = "pages"
-            else:
-                feature = "gal"
-            if self.SortR_DESC.isChecked() == True:
-                up_down = "DESC"
-            else:
-                up_down = "ASC"
-            if len(result_view_list) > 0:
-                c.execute(
-                    f"SELECT * FROM galleryinformation WHERE gal IN {tuple(result_view_list)} ORDER BY {feature} {up_down}")
-                if self.choosedisplaytype.currentText() == "ID":
-                    for tu in c.fetchall():
-                        item = QtWidgets.QListWidgetItem()
-                        item.setText(str(tu[0]))
-                        item.setToolTip(tu[1])
-                        self.resultlist.addItem(item)
-                if self.choosedisplaytype.currentText() == "TITLE":
-                    for tu in c.fetchall():
-                        item = QtWidgets.QListWidgetItem()
-                        item.setText(tu[1])
-                        item.setToolTip(str(tu[0]))
-                        self.resultlist.addItem(item)
+                if len(characters_list) > 0:
+                    print("saving characters_list")
+                    string = "INSERT INTO gallerycharacters VALUES "
+                    comma = ""
+                    characters_list_copy = list(characters_list)
+                    characters_list.clear()
+                    for tu in characters_list_copy:
+                        string = string + comma + tu
+                        comma = ", "
+                    c.execute(string)
+                    conn.commit()
 
-        def preview(self):
-            if self.resultlist.currentItem() != None:
-                self.tags.clear()
-                self.characters.clear()
-                self.artistsandgroups.clear()
-                self.parodies.clear()
-                if self.choosedisplaytype.currentText() == "ID":
-                    id = self.resultlist.currentItem().text()
-                if self.choosedisplaytype.currentText() == "TITLE":
-                    id = self.resultlist.currentItem().toolTip()
-                c.execute(f"SELECT * FROM galleryinformation WHERE gal='{id}'")
-                tu = c.fetchone()
-                title = tu[1]
-                pages = int(tu[2])
-                cover_url = tu[3]
+                if len(artists_list) > 0:
+                    print("saving artists_list")
+                    string = "INSERT INTO galleryartists VALUES "
+                    comma = ""
+                    artists_list_copy = list(artists_list)
+                    artists_list.clear()
+                    for tu in artists_list_copy:
+                        string = string + comma + tu
+                        comma = ", "
+                    c.execute(string)
+                    conn.commit()
 
-                self.title.setText(title.replace("|", "\n"))
-                self.pagescount2.display(pages)
+                if len(groups_list) > 0:
+                    print("saving groups_list")
+                    string = "INSERT INTO gallerygroups VALUES "
+                    comma = ""
+                    groups_list_copy = list(groups_list)
+                    groups_list.clear()
+                    for tu in groups_list_copy:
+                        string = string + comma + tu
+                        comma = ", "
+                    c.execute(string)
+                    conn.commit()
 
-                if self.check_preview.isChecked() == False:
-                    try:
-                        grab = requests.get(cover_url, stream=True)
-                        if grab.status_code == 200:
-                            with open("Icons/cover.jpg", "wb") as f:
-                                grab.raw.decode_content = True
-                                shutil.copyfileobj(grab.raw, f)
-                        width = self.cover.size().width()
-                        height = self.cover.size().height()
-                        if (width / height) > (350 / 496):
-                            self.cover.setPixmap(QtGui.QPixmap("Icons/cover.jpg").scaled(
-                                QtCore.QSize(int((350 / 496) * height), int(height)), QtCore.Qt.KeepAspectRatio,
-                                QtCore.Qt.FastTransformation))
-                        elif (width / height) <= (350 / 496):
-                            self.cover.setPixmap(QtGui.QPixmap("Icons/cover.jpg").scaled(
-                                QtCore.QSize(int(width), int(width / (350 / 496))), QtCore.Qt.KeepAspectRatio,
-                                QtCore.Qt.FastTransformation))
-                    except:
-                        print("Error while loading Cover")
+                if len(categories_list) > 0:
+                    print("saving categories_list")
+                    string = "INSERT INTO gallerycategories VALUES "
+                    comma = ""
+                    categories_list_copy = list(categories_list)
+                    categories_list.clear()
+                    for tu in categories_list_copy:
+                        string = string + comma + tu
+                        comma = ", "
+                    c.execute(string)
+                    conn.commit()
 
-                for type in types:
-                    if type != "categories":
-                        try:
-                            c.execute(f"SELECT tag FROM gallery{type} WHERE gal='{id}'")
-                            for tu in c.fetchall():
-                                if type == "parodies":
-                                    self.parodies.addItem(tu[0])
-                                if type == "characters":
-                                    self.characters.addItem(tu[0])
-                                if type == "tags":
-                                    self.tags.addItem(tu[0])
-                                if type == "artists":
-                                    self.artistsandgroups.addItem(f"{tu[0]} (artist)")
-                                if type == "groups":
-                                    self.artistsandgroups.addItem(f"{tu[0]} (group)")
-                        except:
-                            print(f"Error: {type}")
+                if len(informations_list) > 0:
+                    print("saving informations_list")
+                    string = "INSERT INTO galleryinformation VALUES "
+                    comma = ""
+                    informations_list_copy = list(informations_list)
+                    informations_list.clear()
+                    for tu in informations_list_copy:
+                        string = string + comma + tu
+                        comma = ", "
+                    c.execute(string)
+                    conn.commit()
 
-        def R_ID_toggled(self):
-            self.SortR_TITLE.setChecked(False)
-            self.SortR_PAGES.setChecked(False)
-            self.display_results()
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                results = [executor.submit(fetch, x) for x in not_found]
+                z = 0
+                for f in concurrent.futures.as_completed(results):
+                    print(f.result())
+                    z += 1
+                    if z % 1000 == 0:
+                        save()
+                save()
 
-        def R_PAGES_toggled(self):
-            self.SortR_TITLE.setChecked(False)
-            self.SortR_ID.setChecked(False)
-            self.display_results()
+            with open("404.txt", "a") as f:
+                print("writing gaps into 404.txt")
+                for gal in gaps:
+                    f.write(str(gal))
 
-        def R_TITLE_toggled(self):
-            self.SortR_ID.setChecked(False)
-            self.SortR_PAGES.setChecked(False)
-            self.display_results()
+            stuff = {}
+            stuff2 = {}
 
-        def R_ASC_toggled(self):
-            self.SortR_DESC.setChecked(False)
-            self.display_results()
+            for type in types:
+                typex = type_converter(type)
+                stuff[typex] = []
+                stuff2[typex] = []
+                c.execute(f"SELECT DISTINCT tag FROM gallery{type} WHERE true ORDER BY tag ASC")
+                for tu in c.fetchall():
+                    stuff2[typex].append(tu[0])
+                    string = f"SELECT DISTINCT gal FROM gallery{type} WHERE tag='{tu[0]}'"
+                    c.execute(string)
+                    lenght = len(c.fetchall())
+                    stuff[typex].append(f"""WHEN '{tu[0]}' THEN '{lenght}'""")
+                    print(f"Counting Galleries: {type}/{tu[0]} -- {lenght} ")
 
-        def R_DESC_toggled(self):
-            self.SortR_ASC.setChecked(False)
-            self.display_results()
+            for type in types:
+                typex = type_converter(type)
+                string = f"UPDATE {typex}information SET galleries= CASE tag "
+                string2 = f"END WHERE tag IN {tuple(stuff2[typex])}"
+                print(f"constructing Query for {type}")
+                for string_ in stuff[typex]:
+                    string = string + string_
+                string = string + string2
+                c.execute(string)
+                conn.commit()
+                print(f"commited Changes for {type}")
+            print("finished updating the database")
+            msg = QtWidgets.QMessageBox()
+            msg.setWindowTitle("Finished")
+            msg.setText(f"Datamap up to date.\nWrote URLs of gaps into 404.txt\n")
+            x = msg.exec_()
+    #endregion
+    # region---------result-functions--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    def load_result_filelist(self):
+        self.filebrowser.clear()
+        if self.tabWidget.currentIndex() == 2:
+            for file in os.listdir("./Results (JSON)/"):
+                if file.endswith(".result"):
+                    self.filebrowser.addItem(file)
 
-        def opentaginbrowser2(self, type, abc):
-            print(type)
-            type = type_converter(type)
-            abc = abc.replace(" ", "-")  # .replace(".","")
-            if abc.endswith("-"):
-                abc = abc[:-1]
-            if self.check_internal2.isChecked() == True:
-                qurl = QtCore.QUrl(f"https://hentaifox.com/{type}/{abc}/")
-                self.tabWidget.setCurrentIndex(0)
-                self.add_new_tab(qurl, label="loading...")
-            elif self.check_external2.isChecked() == True:
-                os.system(f"start https://hentaifox.com/{type}/{abc}/")
+    def load_results(self):
+        result_view_list.clear()
+        self.resultlist.clear()
+        if self.filebrowser.currentItem() != None:
+            result_file = self.filebrowser.currentItem().text()
+            with open(f"Results (JSON)/{result_file}", "r") as f:
+                data = json.load(f)
+                for gallery in data:
+                    result_view_list.append(gallery)
+        self.display_results()
 
-        def tags_opentaginbrowser(self):
-            current_abc = self.tags.currentItem().text()
-            current_type = "tags"
-            self.opentaginbrowser2(abc=current_abc, type=current_type)
+    def display_results(self):
+        self.resultlist.clear()
+        if self.SortR_TITLE.isChecked() == True:
+            feature = "title"
+        elif self.SortR_PAGES.isChecked() == True:
+            feature = "pages"
+        else:
+            feature = "gal"
+        if self.SortR_DESC.isChecked() == True:
+            up_down = "DESC"
+        else:
+            up_down = "ASC"
+        if len(result_view_list) > 0:
+            c.execute(
+                f"SELECT * FROM galleryinformation WHERE gal IN {tuple(result_view_list)} ORDER BY {feature} {up_down}")
+            if self.choosedisplaytype.currentText() == "ID":
+                for tu in c.fetchall():
+                    item = QtWidgets.QListWidgetItem()
+                    item.setText(str(tu[0]))
+                    item.setToolTip(tu[1])
+                    self.resultlist.addItem(item)
+            if self.choosedisplaytype.currentText() == "TITLE":
+                for tu in c.fetchall():
+                    item = QtWidgets.QListWidgetItem()
+                    item.setText(tu[1])
+                    item.setToolTip(str(tu[0]))
+                    self.resultlist.addItem(item)
 
-        def characters_opentaginbrowser(self):
-            current_abc = self.characters.currentItem().text()
-            current_type = "characters"
-            self.opentaginbrowser2(abc=current_abc, type=current_type)
-
-        def parodies_opentaginbrowser(self):
-            current_abc = self.parodies.currentItem().text()
-            current_type = "parodies"
-            self.opentaginbrowser2(abc=current_abc, type=current_type)
-
-        def artistsandgroups_opentaginbrowser(self):
-            current_abc = self.artistsandgroups.currentItem().text()[
-                          :self.artistsandgroups.currentItem().text().find(" (")]
-            current_type = self.artistsandgroups.currentItem().text()[self.artistsandgroups.currentItem().text().find(
-                "(") + 1:self.artistsandgroups.currentItem().text().find(")")]
-            current_type = current_type + "s"
-            self.opentaginbrowser2(abc=current_abc, type=current_type)
-
-        def opengalleryinternal(self):
+    def preview(self):
+        if self.resultlist.currentItem() != None:
+            self.tags.clear()
+            self.characters.clear()
+            self.artistsandgroups.clear()
+            self.parodies.clear()
             if self.choosedisplaytype.currentText() == "ID":
                 id = self.resultlist.currentItem().text()
             if self.choosedisplaytype.currentText() == "TITLE":
                 id = self.resultlist.currentItem().toolTip()
-            url = f"https://hentaifox.com/gallery/{id}"
-            qurl = QtCore.QUrl(url)
+            c.execute(f"SELECT * FROM galleryinformation WHERE gal='{id}'")
+            tu = c.fetchone()
+            title = tu[1]
+            pages = int(tu[2])
+            cover_url = tu[3]
+
+            self.title.setText(title.replace("|", "\n"))
+            self.pagescount2.display(pages)
+
+            if self.check_preview.isChecked() == False:
+                try:
+                    grab = requests.get(cover_url, stream=True)
+                    if grab.status_code == 200:
+                        with open("Icons/cover.jpg", "wb") as f:
+                            grab.raw.decode_content = True
+                            shutil.copyfileobj(grab.raw, f)
+                    width = self.cover.size().width()
+                    height = self.cover.size().height()
+                    if (width / height) > (350 / 496):
+                        self.cover.setPixmap(QtGui.QPixmap("Icons/cover.jpg").scaled(
+                            QtCore.QSize(int((350 / 496) * height), int(height)), QtCore.Qt.KeepAspectRatio,
+                            QtCore.Qt.FastTransformation))
+                    elif (width / height) <= (350 / 496):
+                        self.cover.setPixmap(QtGui.QPixmap("Icons/cover.jpg").scaled(
+                            QtCore.QSize(int(width), int(width / (350 / 496))), QtCore.Qt.KeepAspectRatio,
+                            QtCore.Qt.FastTransformation))
+                except:
+                    print("Error while loading Cover")
+
+            for type in types:
+                if type != "categories":
+                    try:
+                        c.execute(f"SELECT tag FROM gallery{type} WHERE gal='{id}'")
+                        for tu in c.fetchall():
+                            if type == "parodies":
+                                self.parodies.addItem(tu[0])
+                            if type == "characters":
+                                self.characters.addItem(tu[0])
+                            if type == "tags":
+                                self.tags.addItem(tu[0])
+                            if type == "artists":
+                                self.artistsandgroups.addItem(f"{tu[0]} (artist)")
+                            if type == "groups":
+                                self.artistsandgroups.addItem(f"{tu[0]} (group)")
+                    except:
+                        print(f"Error: {type}")
+
+    def R_ID_toggled(self):
+        self.SortR_TITLE.setChecked(False)
+        self.SortR_PAGES.setChecked(False)
+        self.display_results()
+
+    def R_PAGES_toggled(self):
+        self.SortR_TITLE.setChecked(False)
+        self.SortR_ID.setChecked(False)
+        self.display_results()
+
+    def R_TITLE_toggled(self):
+        self.SortR_ID.setChecked(False)
+        self.SortR_PAGES.setChecked(False)
+        self.display_results()
+
+    def R_ASC_toggled(self):
+        self.SortR_DESC.setChecked(False)
+        self.display_results()
+
+    def R_DESC_toggled(self):
+        self.SortR_ASC.setChecked(False)
+        self.display_results()
+
+    def opentaginbrowser2(self, type, abc):
+        print(type)
+        type = type_converter(type)
+        abc = abc.replace(" ", "-")  # .replace(".","")
+        if abc.endswith("-"):
+            abc = abc[:-1]
+        if self.check_internal2.isChecked() == True:
+            qurl = QtCore.QUrl(f"https://hentaifox.com/{type}/{abc}/")
             self.tabWidget.setCurrentIndex(0)
             self.add_new_tab(qurl, label="loading...")
+        elif self.check_external2.isChecked() == True:
+            os.system(f"start https://hentaifox.com/{type}/{abc}/")
 
-        def opengalleryexternal(self):
-            if self.choosedisplaytype.currentText() == "ID":
-                id = self.resultlist.currentItem().text()
-            if self.choosedisplaytype.currentText() == "TITLE":
-                id = self.resultlist.currentItem().toolTip()
-            url = f"https://hentaifox.com/gallery/{id}"
-            os.system(f"start {url}")
+    def tags_opentaginbrowser(self):
+        current_abc = self.tags.currentItem().text()
+        current_type = "tags"
+        self.opentaginbrowser2(abc=current_abc, type=current_type)
 
-        def deletefile(self):
-            if self.filebrowser.currentItem() != None:
-                result_file = self.filebrowser.currentItem().text()
-                os.remove(f"Results (JSON)/{result_file}")
-                os.remove(f"Results (TXT)/{result_file[:-7]}.txt")
-                self.load_result_filelist()
+    def characters_opentaginbrowser(self):
+        current_abc = self.characters.currentItem().text()
+        current_type = "characters"
+        self.opentaginbrowser2(abc=current_abc, type=current_type)
 
-        def copy_result_to_clipboard(self):
-            if self.choosedisplaytype.currentText() == "ID":
-                id = self.resultlist.currentItem().text()
-            if self.choosedisplaytype.currentText() == "TITLE":
-                id = self.resultlist.currentItem().toolTip()
-            pyperclip.copy(f"https://hentaifox.com/gallery/{id}")
+    def parodies_opentaginbrowser(self):
+        current_abc = self.parodies.currentItem().text()
+        current_type = "parodies"
+        self.opentaginbrowser2(abc=current_abc, type=current_type)
 
-        def open_json_folder(self):
-            path = os.path.abspath("./Results (JSON)/")
-            os.system(f'explorer {path}')
+    def artistsandgroups_opentaginbrowser(self):
+        current_abc = self.artistsandgroups.currentItem().text()[
+                      :self.artistsandgroups.currentItem().text().find(" (")]
+        current_type = self.artistsandgroups.currentItem().text()[self.artistsandgroups.currentItem().text().find(
+            "(") + 1:self.artistsandgroups.currentItem().text().find(")")]
+        current_type = current_type + "s"
+        self.opentaginbrowser2(abc=current_abc, type=current_type)
 
-        def open_txt_folder(self):
-            path = os.path.abspath("./Results (TXT)/")
-            os.system(f'explorer {path}')
+    def opengalleryinternal(self):
+        if self.choosedisplaytype.currentText() == "ID":
+            id = self.resultlist.currentItem().text()
+        if self.choosedisplaytype.currentText() == "TITLE":
+            id = self.resultlist.currentItem().toolTip()
+        url = f"https://hentaifox.com/gallery/{id}"
+        qurl = QtCore.QUrl(url)
+        self.tabWidget.setCurrentIndex(0)
+        self.add_new_tab(qurl, label="loading...")
 
+    def opengalleryexternal(self):
+        if self.choosedisplaytype.currentText() == "ID":
+            id = self.resultlist.currentItem().text()
+        if self.choosedisplaytype.currentText() == "TITLE":
+            id = self.resultlist.currentItem().toolTip()
+        url = f"https://hentaifox.com/gallery/{id}"
+        os.system(f"start {url}")
 
+    def deletefile(self):
+        if self.filebrowser.currentItem() != None:
+            result_file = self.filebrowser.currentItem().text()
+            os.remove(f"Results (JSON)/{result_file}")
+            os.remove(f"Results (TXT)/{result_file[:-7]}.txt")
+            self.load_result_filelist()
+
+    def copy_result_to_clipboard(self):
+        if self.choosedisplaytype.currentText() == "ID":
+            id = self.resultlist.currentItem().text()
+        if self.choosedisplaytype.currentText() == "TITLE":
+            id = self.resultlist.currentItem().toolTip()
+        pyperclip.copy(f"https://hentaifox.com/gallery/{id}")
+
+    def open_json_folder(self):
+        path = os.path.abspath("./Results (JSON)/")
+        os.system(f'explorer {path}')
+
+    def open_txt_folder(self):
+        path = os.path.abspath("./Results (TXT)/")
+        os.system(f'explorer {path}')
+    #endregion
+#endregion
+# region-web-engine
 class WebEngineView(QWebEngineView):
     def __init__(self, *args, **kwargs):
         QWebEngineView.__init__(self, *args, **kwargs)
@@ -2220,8 +2578,8 @@ class WebEngineView(QWebEngineView):
         new_webview = WebEngineView(self.tab)
         self.tab.create_new_tab(new_webview)
         return new_webview
-
-
+#endregion
+# region app.exec_
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     app.setApplicationName("HentaiFox Desktop")
@@ -2233,3 +2591,4 @@ if __name__ == "__main__":
     ui.setupUi(HentaiFoxDesktop)
     HentaiFoxDesktop.show()
     sys.exit(app.exec_())
+#endregion
