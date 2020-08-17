@@ -957,7 +957,7 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         self.tabs.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(HentaiFoxDesktop)
         # endregion
-        # region---------browser-setup----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        # region---------browser-setup------------------------------------------
         self.tabWidget.setCurrentIndex(0)
         self.add_new_tab(QUrl('https://hentaifox.com/'), 'Homepage')
         self.urlbar.setText("https://hentaifox.com/")
@@ -980,7 +980,7 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         self.browserMenu = QMenu()
         self.create_menu()
         # endregion
-        # region---------multi-search-setup-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        # region---------multi-search-setup-------------------------------------
         create_itemlist("tag", "ASC")
         self.choosetype.addItem("-- Choose Type --")
         self.choosetype.addItem("tags")
@@ -992,7 +992,7 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         self.describtion.setText("Select tag to view description")
         self.percentagecount.setValue(0)
         # endregion
-        # region---------update-setup-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        # region---------update-setup-------------------------------------------
         self.startslider.setMaximum(int(latest_gallery))
         self.startslider.setValue(int(latest_gallery - 500))
         self.stopslider.setMaximum(int(latest_gallery))
@@ -1000,11 +1000,11 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         self.start.setText(f"Start searching for gaps and updates at: {latest_gallery-500}")
         self.stop.setText(f"Stop searching for gaps and updates at: {latest_gallery}")
         # endregion
-        # region---------result-setup-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        # region---------result-setup-------------------------------------------
         self.choosedisplaytype.addItem("TITLE")
         self.choosedisplaytype.addItem("ID")
         # endregion
-        # region---------browser-signals--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        # region---------browser-signals----------------------------------------
         self.backbutton.clicked.connect(lambda: self.tabs.currentWidget().back())
         self.forwardbutton.clicked.connect(lambda: self.tabs.currentWidget().forward())
         self.reloadbutton.clicked.connect(lambda: self.tabs.currentWidget().reload())
@@ -1016,7 +1016,7 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         self.urlbar.returnPressed.connect(self.navigate_to_url)
         self.downloadbutton.clicked.connect(self.download)
         # endregion
-        # region---------multi-search-signals---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        # region---------multi-search-signals-----------------------------------
         self.choosetype.activated.connect(self.update_taglist)
         self.whitelist_addbutton.clicked.connect(self.whitelist_add)
         self.whitelist_removebutton.clicked.connect(self.whitelist_remove)
@@ -1036,12 +1036,12 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         self.Sort_Name.clicked.connect(self.name_toggled)
         self.Sort_Count.clicked.connect(self.count_toggled)
         # endregion
-        # region---------update-signals---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        # region---------update-signals-----------------------------------------
         self.startslider.valueChanged.connect(self.update_start)
         self.stopslider.valueChanged.connect(self.update_stop)
         self.updatebutton.clicked.connect(self.update_datamap)
         # endregion
-        # region---------result-signals---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        # region---------result-signals-----------------------------------------
         self.tabWidget.currentChanged.connect(self.load_result_filelist)
         self.loadfilebutton.clicked.connect(self.load_results)
         self.resultlist.currentItemChanged.connect(self.preview)
@@ -1063,7 +1063,7 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         self.openjson_button.clicked.connect(self.open_json_folder)
 
     # endregion
-    # region---------set-text----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    # region---------set-text---------------------------------------------------
     def retranslateUi(self, HentaiFoxDesktop):
         _translate = QtCore.QCoreApplication.translate
         HentaiFoxDesktop.setWindowTitle(_translate("HentaiFoxDesktop", "HentaiFox Desktop"))
@@ -1143,7 +1143,7 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         self.openjson_button.setText('Open "Results (JSON)"')
         self.opentxt_button.setText('Open "Results (TXT)"')
     # endregion
-    # region ---------browser-functions------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    # region ---------browser-functions-----------------------------------------
     def add_new_tab(self, qurl=None, label="Loading..."):
         if qurl is None:
             qurl = QUrl('https://hentaifox.com/')
@@ -1461,7 +1461,7 @@ class Ui_HentaiFoxDesktop(QMainWindow):
                     self.gallery_taginfo_overlay.show()
                 else:
                     self.gallery_scraping_overlay.raise_()
-                    self.gallery_scraping_overlay.setText(f"Scraping information of gallery ID[{id}]")
+                    self.gallery_scraping_overlay.setText(f"Database Update, scraping latest galleries.\nWARNING: This only scraps a few of the latest galleries.\nIf you haven't updated the database for more then a day\nplease use the update button in the Update tab.")
                     self.gallery_scraping_overlay.adjustSize()
                     p = self.tabs.geometry().bottomRight() - QPoint(int(self.tabs.geometry().width()/2+self.gallery_scraping_overlay.geometry().width()/2) ,int(self.tabs.geometry().height()/2+self.gallery_scraping_overlay.geometry().height()/2))
                     self.gallery_scraping_overlay.move(p)
@@ -1735,7 +1735,12 @@ class Ui_HentaiFoxDesktop(QMainWindow):
                                         conn.commit()
                                         print(f"commited Changes for {type}")
                         QtWidgets.qApp.processEvents()
-                        fetch(id)
+
+                        for x in range(int(id)-10,int(id)+10):
+                            c.execute(f"SELECT * FROM galleryinformation WHERE gal={x}")
+                            test = c.fetchall()
+                            if test == []:
+                                fetch(x)
                         save()
                         self.gallery_scraping_overlay.hide()
                     QtWidgets.qApp.processEvents()
@@ -1816,7 +1821,7 @@ class Ui_HentaiFoxDesktop(QMainWindow):
 
         self.menu_button.setMenu(self.browserMenu)
     # endregion
-    # region ---------multi-search-functions-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    # region ---------multi-search-functions------------------------------------
     def update_taglist(self):
         self.criterialist.clear()
         if self.choosetype.currentText() == "tags":
@@ -2071,7 +2076,7 @@ class Ui_HentaiFoxDesktop(QMainWindow):
             feature = "galleries"
         self.reorder_itemlist(feature, up_down)
     # endregion
-    # region ---------update-functions-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    # region ---------update-functions------------------------------------------
     def update_start(self):
         self.start.setText(f"Start searching for gaps and updates at: {self.startslider.value()}")
 
@@ -2231,6 +2236,10 @@ class Ui_HentaiFoxDesktop(QMainWindow):
                     gaps.append(f"{x}\n")
                 return f"Done ({x})"
 
+            change_tags = {}
+            for type in types:
+                change_tags[type] = []
+
             def save():
                 if len(tags_list) > 0:
                     print("saving tags_list")
@@ -2241,8 +2250,11 @@ class Ui_HentaiFoxDesktop(QMainWindow):
                     for tu in tags_list_copy:
                         string = string + comma + tu
                         comma = ", "
+                        if tu[tu.find(",")+2:tu.find(")")-1] not in change_tags["tags"]:
+                            change_tags["tags"].append(tu[tu.find(",")+2:tu.find(")")-1])
                     c.execute(string)
                     conn.commit()
+
 
                 if len(parodies_list) > 0:
                     print("saving parodies_list")
@@ -2253,6 +2265,8 @@ class Ui_HentaiFoxDesktop(QMainWindow):
                     for tu in parodies_list_copy:
                         string = string + comma + tu
                         comma = ", "
+                        if tu[tu.find(",")+2:tu.find(")")-1] not in change_tags["parodies"]:
+                            change_tags["parodies"].append(tu[tu.find(",")+2:tu.find(")")-1])
                     c.execute(string)
                     conn.commit()
 
@@ -2265,6 +2279,8 @@ class Ui_HentaiFoxDesktop(QMainWindow):
                     for tu in characters_list_copy:
                         string = string + comma + tu
                         comma = ", "
+                        if tu[tu.find(",")+2:tu.find(")")-1] not in change_tags["characters"]:
+                            change_tags["characters"].append(tu[tu.find(",")+2:tu.find(")")-1])
                     c.execute(string)
                     conn.commit()
 
@@ -2277,6 +2293,8 @@ class Ui_HentaiFoxDesktop(QMainWindow):
                     for tu in artists_list_copy:
                         string = string + comma + tu
                         comma = ", "
+                        if tu[tu.find(",")+2:tu.find(")")-1] not in change_tags["artists"]:
+                            change_tags["artists"].append(tu[tu.find(",")+2:tu.find(")")-1])
                     c.execute(string)
                     conn.commit()
 
@@ -2289,6 +2307,8 @@ class Ui_HentaiFoxDesktop(QMainWindow):
                     for tu in groups_list_copy:
                         string = string + comma + tu
                         comma = ", "
+                        if tu[tu.find(",")+2:tu.find(")")-1] not in change_tags["groups"]:
+                            change_tags["groups"].append(tu[tu.find(",")+2:tu.find(")")-1])
                     c.execute(string)
                     conn.commit()
 
@@ -2301,6 +2321,8 @@ class Ui_HentaiFoxDesktop(QMainWindow):
                     for tu in categories_list_copy:
                         string = string + comma + tu
                         comma = ", "
+                        if tu[tu.find(",")+2:tu.find(")")-1] not in change_tags["categories"]:
+                            change_tags["categories"].append(tu[tu.find(",")+2:tu.find(")")-1])
                     c.execute(string)
                     conn.commit()
 
@@ -2333,38 +2355,43 @@ class Ui_HentaiFoxDesktop(QMainWindow):
 
             stuff = {}
             stuff2 = {}
-
             for type in types:
                 typex = type_converter(type)
                 stuff[typex] = []
                 stuff2[typex] = []
-                c.execute(f"SELECT DISTINCT tag FROM gallery{type} WHERE true ORDER BY tag ASC")
-                for tu in c.fetchall():
-                    stuff2[typex].append(tu[0])
-                    string = f"SELECT DISTINCT gal FROM gallery{type} WHERE tag='{tu[0]}'"
+                for tag in change_tags[type]:
+                    stuff2[typex].append(tag)
+                    string = f"SELECT DISTINCT gal FROM gallery{type} WHERE tag='{tag}'"
                     c.execute(string)
                     lenght = len(c.fetchall())
-                    stuff[typex].append(f"""WHEN '{tu[0]}' THEN '{lenght}'""")
-                    print(f"Counting Galleries: {type}/{tu[0]} -- {lenght} ")
-
-            for type in types:
+                    stuff[typex].append(f"""WHEN '{tag}' THEN '{lenght}'""")
+                    print(f"Counting Galleries: {type}/{tag} -- {lenght} ")
+            for type,list_ in change_tags.items():
                 typex = type_converter(type)
-                string = f"UPDATE {typex}information SET galleries= CASE tag "
-                string2 = f"END WHERE tag IN {tuple(stuff2[typex])}"
-                print(f"constructing Query for {type}")
-                for string_ in stuff[typex]:
-                    string = string + string_
-                string = string + string2
-                c.execute(string)
-                conn.commit()
-                print(f"commited Changes for {type}")
+                if len(list_)>0:
+                    if len(stuff2[typex]) > 1:
+                        string = f"UPDATE {typex}information SET galleries= CASE tag "
+                        string2 = f"END WHERE tag IN {tuple(stuff2[typex])}"
+                        for string_ in stuff[typex]:
+                            string = string + string_
+                        string = string + string2
+                        c.execute(string)
+                        conn.commit()
+                        print(f"commited Changes for {type}")
+                    else:
+                        thing = str(stuff[typex][0])
+                        thing2 = thing[thing.find("THEN '")+6:-1]
+                        string = f"UPDATE {typex}information SET galleries= '{thing2}' WHERE tag = '{stuff2[typex][0]}'"
+                        c.execute(string)
+                        conn.commit()
+                        print(f"commited Changes for {type}")
             print("finished updating the database")
             msg = QtWidgets.QMessageBox()
             msg.setWindowTitle("Finished")
             msg.setText(f"Datamap up to date.\nWrote URLs of gaps into 404.txt\n")
             x = msg.exec_()
     #endregion
-    # region---------result-functions--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    # region---------result-functions-------------------------------------------
     def load_result_filelist(self):
         self.filebrowser.clear()
         if self.tabWidget.currentIndex() == 2:
