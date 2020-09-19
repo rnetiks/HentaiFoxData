@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 from zipfile import ZipFile
 import sys
 import concurrent.futures
+import threading
 import requests
 import urllib
 import os
@@ -19,7 +20,8 @@ import pyperclip
 import sqlite3
 import re
 import subprocess
-
+#endregion
+# region---Global-Setup--------------
 conn = sqlite3.connect("Data.db")
 c = conn.cursor()
 
@@ -30,8 +32,7 @@ db_con()
 
 localdb = sqlite3.connect("Local.db")
 loc = localdb.cursor()
-#endregion
-# region---Global-Setup--------------
+
 types = ["parodies", "characters", "tags", "artists", "groups", "categories"]
 white_list = {}
 black_list = {}
@@ -98,7 +99,7 @@ class Ui_Dialog(QDialog):
     def __init__(self, *args, **kwargs):
         super(Ui_Dialog, self).__init__(*args, **kwargs)
         self.setObjectName(u"Dialog")
-        # self.setWindowFlags(Qt.WindowTitleHint | Qt.WindowCloseButtonHint | Qt.WindowStaysOnTopHint)
+        self.setWindowFlags(Qt.Dialog | Qt.WindowStaysOnTopHint | Qt.WindowTitleHint | Qt.WindowCloseButtonHint)
         self.resize(303, 123)
         self.label = QLabel(self)
         self.label.setObjectName(u"label")
@@ -114,6 +115,136 @@ class Ui_Dialog(QDialog):
         self.progressBar.setValue(24)
         self.setWindowTitle("Database Download")
         self.label.setText("<html><head/><body><p><span style=\" font-size:12pt;\">Downloading database</span></p><p><span style=\" font-size:12pt;\">This may take a while...</span></p></body></html>")
+#endregion
+# region download class
+
+
+class DownloadThread(QThread):
+    signal = pyqtSignal('PyQt_PyObject')
+    message = pyqtSignal('PyQt_PyObject')
+    close = pyqtSignal('PyQt_PyObject')
+
+    def __init__(self):
+        QThread.__init__(self)
+        self.data = []
+
+    def run(self):
+        print(self.data)
+
+        data = self.data
+        id = data[0]
+        title = data[1].replace("|","\n")
+        filename = data[1].replace("|", "_").replace(".", "").replace(":", "-").replace('"',"'").replace("<","[").replace(">","]").replace("?","").replace("/","_").replace("*","·")
+        foldername =filename.replace(" ","_")
+        pages = data[2]
+        dir = data[3]
+        eh_id = data[4]
+        def download_(url2):
+            resource = requests.get(url2)
+            x = url2[[m.start() for m in re.finditer("/",url2)][4]+1:-4]
+            if str(resource) == "<Response [200]>":
+                output = open(f"{foldername}\{x}.jpg", "wb")
+                output.write(resource.content)
+                output.close()
+            else:
+                url2 = url2[:-3] + "png"
+                resource2 = requests.get(url2)
+                output = open(f"{foldername}\{x}.png", "wb")
+                output.write(resource2.content)
+                output.close()
+            print(f"Page {x} done")
+
+        try:
+            os.mkdir(f"./{foldername}")
+        except FileExistsError:
+            print(f"FileExistsError: ./{foldername} already exsits")
+            return
+
+        url_list = []
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            self.message.emit(f"Downloading:\n{title}\nID: {id}\nPages: {pages}")
+            for x in range(int(pages) + 1):
+                if x > 0:
+                    url2 = f"https://i.hentaifox.com/{dir}/{eh_id}/{x}.jpg"
+                    url_list.append(url2)
+            progress_value = 0
+            progress_step = 100/int(pages)
+            results = [executor.submit(download_, url2) for url2 in url_list]
+            for thread in concurrent.futures.as_completed(results):
+                progress_value += progress_step
+                xx = int(progress_value)
+                if xx <100:
+                    self.signal.emit(xx)
+
+        with ZipFile(f"Download/{filename}.zip", "w") as zip:
+            for file in os.listdir(f"./{foldername}/"):
+                zip.write(f"{foldername}/{file}")
+            shutil.rmtree(f'./{foldername}/')
+        self.signal.emit(100)
+        print("finished")
+        self.close.emit(filename)
+
+class Ui_Download(QDialog):
+    conn = sqlite3.connect("Data.db")
+    c = conn.cursor()
+    def __init__(self, *args, **kwargs):
+        super(Ui_Download, self).__init__(*args, **kwargs)
+        self.setObjectName(u"Dialog")
+        self.setWindowTitle("Download Gallery")
+        self.setWindowFlags(Qt.Dialog | Qt.WindowStaysOnTopHint | Qt.WindowTitleHint | Qt.WindowCloseButtonHint)
+        self.resize(250, 200)
+        self.gridLayout = QtWidgets.QGridLayout(self)
+        self.gridLayout.setObjectName("gridLayout")
+        self.label = QtWidgets.QLabel(self)
+        font = QtGui.QFont()
+        font.setFamily("Arial")
+        font.setPointSize(10)
+        self.label.setFont(font)
+        self.label.setAlignment(QtCore.Qt.AlignHCenter|QtCore.Qt.AlignTop)
+        self.label.setObjectName("label")
+        self.gridLayout.addWidget(self.label, 0, 0, 1, 1)
+        self.pushButton = QPushButton(self)
+        self.pushButton.setObjectName(u"pushButton")
+        self.pushButton.setText("DOWNLOAD")
+        self.gridLayout.addWidget(self.pushButton, 1, 0, 1, 1)
+        self.progressBar = QtWidgets.QProgressBar(self)
+        self.progressBar.setObjectName("progressBar")
+        self.progressBar.hide()
+        self.gridLayout.addWidget(self.progressBar, 2, 0, 1, 1)
+
+        self.pushButton.clicked.connect(self.start_download)
+
+        self.dwn_thread = DownloadThread()
+        self.dwn_thread.signal.connect(self.finished)
+        self.dwn_thread.message.connect(self.message)
+        self.dwn_thread.close.connect(self.close)
+
+    def data_(self,data):
+        self.data = data
+        self.label.setText(f"Download:\n{data[1]}\nID: {data[0]}\nPages: {data[2]}")
+        self.pushButton.setText("DOWNLOAD")
+
+
+    def start_download(self):
+        self.dwn_thread.data = self.data
+        self.progressBar.show()
+        self.dwn_thread.start()
+
+    def finished(self,result):
+        self.progressBar.setValue(int(result))
+
+    def message(self,result):
+        self.label.setText(f"{result}")
+
+    def close(self,result):
+        msg = QtWidgets.QMessageBox()
+        msg.setWindowTitle("Download Finished")
+        msg.setText(f'You can find\n"{result}.zip"\nin the "Download" folder.')
+        msg.setWindowFlags(Qt.WindowTitleHint | Qt.WindowCloseButtonHint | Qt.WindowStaysOnTopHint)
+        msg.exec_()
+        self.done(0)
+
+
 #endregion
 # region---GUI-----------------------
 class Ui_HentaiFoxDesktop(QMainWindow):
@@ -365,34 +496,20 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         self.verticalLayout_2 = QtWidgets.QVBoxLayout()
         self.verticalLayout_2.setSpacing(10)
         self.verticalLayout_2.setObjectName("verticalLayout_2")
-        self.whitelist_arrows_r = QtWidgets.QLabel(self.search)
-        size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Ignored)
-        size_policy.setHorizontalStretch(0)
-        size_policy.setVerticalStretch(0)
-        size_policy.setHeightForWidth(self.whitelist_arrows_r.sizePolicy().hasHeightForWidth())
-        self.whitelist_arrows_r.setSizePolicy(size_policy)
-        self.whitelist_arrows_r.setFont(font12)
-        self.whitelist_arrows_r.setAlignment(QtCore.Qt.AlignCenter)
-        self.whitelist_arrows_r.setObjectName("whitelist_arrows_r")
-        self.verticalLayout_2.addWidget(self.whitelist_arrows_r)
         self.whitelist_addbutton = QtWidgets.QPushButton(self.search)
         self.whitelist_addbutton.setFont(font11)
         self.whitelist_addbutton.setObjectName("whitelist_addbutton")
         self.verticalLayout_2.addWidget(self.whitelist_addbutton)
+
+        self.whitelist_clearbutton = QtWidgets.QPushButton(self.search)
+        self.whitelist_clearbutton.setFont(font11)
+        self.whitelist_clearbutton.setObjectName("whitelist_clearbutton")
+        self.verticalLayout_2.addWidget(self.whitelist_clearbutton)
+
         self.whitelist_removebutton = QtWidgets.QPushButton(self.search)
         self.whitelist_removebutton.setFont(font11)
         self.whitelist_removebutton.setObjectName("whitelist_removebutton")
         self.verticalLayout_2.addWidget(self.whitelist_removebutton)
-        self.whitelist_arrows_l = QtWidgets.QLabel(self.search)
-        size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Ignored)
-        size_policy.setHorizontalStretch(0)
-        size_policy.setVerticalStretch(0)
-        size_policy.setHeightForWidth(self.whitelist_arrows_l.sizePolicy().hasHeightForWidth())
-        self.whitelist_arrows_l.setSizePolicy(size_policy)
-        self.whitelist_arrows_l.setFont(font12)
-        self.whitelist_arrows_l.setAlignment(QtCore.Qt.AlignCenter)
-        self.whitelist_arrows_l.setObjectName("whitelist_arrows_l")
-        self.verticalLayout_2.addWidget(self.whitelist_arrows_l)
         self.verticalLayout_2.setStretch(0, 1)
         self.verticalLayout_2.setStretch(1, 1)
         self.verticalLayout_2.setStretch(2, 1)
@@ -418,34 +535,20 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         self.verticalLayout_3 = QtWidgets.QVBoxLayout()
         self.verticalLayout_3.setSpacing(10)
         self.verticalLayout_3.setObjectName("verticalLayout_3")
-        self.blacklist_arrows_r = QtWidgets.QLabel(self.search)
-        size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Ignored)
-        size_policy.setHorizontalStretch(0)
-        size_policy.setVerticalStretch(0)
-        size_policy.setHeightForWidth(self.blacklist_arrows_r.sizePolicy().hasHeightForWidth())
-        self.blacklist_arrows_r.setSizePolicy(size_policy)
-        self.blacklist_arrows_r.setFont(font12)
-        self.blacklist_arrows_r.setAlignment(QtCore.Qt.AlignCenter)
-        self.blacklist_arrows_r.setObjectName("blacklist_arrows_r")
-        self.verticalLayout_3.addWidget(self.blacklist_arrows_r)
         self.blacklist_addbutton = QtWidgets.QPushButton(self.search)
         self.blacklist_addbutton.setFont(font11)
         self.blacklist_addbutton.setObjectName("blacklist_addbutton")
         self.verticalLayout_3.addWidget(self.blacklist_addbutton)
+
+        self.blacklist_clearbutton = QtWidgets.QPushButton(self.search)
+        self.blacklist_clearbutton.setFont(font11)
+        self.blacklist_clearbutton.setObjectName("blacklist_clearbutton")
+        self.verticalLayout_3.addWidget(self.blacklist_clearbutton)
+
         self.blacklist_removebutton = QtWidgets.QPushButton(self.search)
         self.blacklist_removebutton.setFont(font11)
         self.blacklist_removebutton.setObjectName("blacklist_removebutton")
         self.verticalLayout_3.addWidget(self.blacklist_removebutton)
-        self.blacklist_arrows_l = QtWidgets.QLabel(self.search)
-        size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Ignored)
-        size_policy.setHorizontalStretch(0)
-        size_policy.setVerticalStretch(0)
-        size_policy.setHeightForWidth(self.blacklist_arrows_l.sizePolicy().hasHeightForWidth())
-        self.blacklist_arrows_l.setSizePolicy(size_policy)
-        self.blacklist_arrows_l.setFont(font12)
-        self.blacklist_arrows_l.setAlignment(QtCore.Qt.AlignCenter)
-        self.blacklist_arrows_l.setObjectName("blacklist_arrows_l")
-        self.verticalLayout_3.addWidget(self.blacklist_arrows_l)
         self.verticalLayout_3.setStretch(0, 1)
         self.verticalLayout_3.setStretch(1, 1)
         self.verticalLayout_3.setStretch(2, 1)
@@ -623,6 +726,10 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         self.SortR_DESC.setAutoExclusive(False)
         self.SortR_DESC.setFont(font11)
         self.verticalLayout_sortresults2.addWidget(self.SortR_DESC)
+        self.open_in_result_tab_button = QPushButton(self.results)
+        self.open_in_result_tab_button.setDisabled(True)
+        self.verticalLayout_sortresults2.addWidget(self.open_in_result_tab_button)
+
         self.verticalLayout_20.addLayout(self.horizontalLayout_sortresults)
         self.horizontalLayout_sortresults.addLayout(self.verticalLayout_sortresults2)
         self.check_preview = QtWidgets.QCheckBox(self.results)
@@ -1009,8 +1116,10 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         # region---------multi-search-signals-----------------------------------
         self.choosetype.activated.connect(self.update_taglist)
         self.whitelist_addbutton.clicked.connect(self.whitelist_add)
+        self.whitelist_clearbutton.clicked.connect(self.whitelist_clear)
         self.whitelist_removebutton.clicked.connect(self.whitelist_remove)
         self.blacklist_addbutton.clicked.connect(self.blacklist_add)
+        self.blacklist_clearbutton.clicked.connect(self.blacklist_clear)
         self.blacklist_removebutton.clicked.connect(self.blacklist_remove)
         self.criterialist.itemClicked.connect(self.criterialist_update_gallerycounter)
         self.whitelist.itemClicked.connect(self.whitelist_update_gallerycounter)
@@ -1049,7 +1158,7 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         self.resultlist.itemDoubleClicked.connect(self.copy_result_to_clipboard)
         self.opentxt_button.clicked.connect(self.open_txt_folder)
         self.openjson_button.clicked.connect(self.open_json_folder)
-
+        self.open_in_result_tab_button.clicked.connect(self.open_in_result_tab)
     # endregion
     # region ---------set-text--------------------------------------------------
     def retranslateUi(self, HentaiFoxDesktop):
@@ -1062,14 +1171,12 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.browse), _translate("HentaiFoxDesktop", "Browse"))
         self.label.setText(_translate("HentaiFoxDesktop",
                                       "Press \"search\" to search for galleries featuring the whitelisted tags and not featuring the blacklisted tags."))
-        self.whitelist_arrows_r.setText(_translate("HentaiFoxDesktop", ">>>>>>>>>>>>>>"))
         self.whitelist_addbutton.setText(_translate("HentaiFoxDesktop", "Add to Whitelist"))
+        self.whitelist_clearbutton.setText("Clear Whitelist")
         self.whitelist_removebutton.setText(_translate("HentaiFoxDesktop", "Remove from Whitelist"))
-        self.whitelist_arrows_l.setText(_translate("HentaiFoxDesktop", "<<<<<<<<<<<<<<"))
-        self.blacklist_arrows_r.setText(_translate("HentaiFoxDesktop", ">>>>>>>>>>>>>>"))
         self.blacklist_addbutton.setText(_translate("HentaiFoxDesktop", "Add to Blacklist"))
+        self.blacklist_clearbutton.setText("Clear Blacklist")
         self.blacklist_removebutton.setText(_translate("HentaiFoxDesktop", "Remove from Blacklist"))
-        self.blacklist_arrows_l.setText(_translate("HentaiFoxDesktop", "<<<<<<<<<<<<<<"))
         self.label_choosedoubleclickfunc.setText(
             _translate("HentaiFoxDesktop", "<html><head/><body><p>Doubleclick Tag to:</p></body></html>"))
         self.check_internal.setText(_translate("HentaiFoxDesktop", "Open in internal Browser"))
@@ -1125,6 +1232,7 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         self.SortR_DESC.setText("Descending")
         self.openjson_button.setText('Open "Results (JSON)"')
         self.opentxt_button.setText('Open "Results (TXT)"')
+        self.open_in_result_tab_button.setText("Use Browser Viewer")
     # endregion
     # region ---------other-----------------------------------------------------
     def change_cursor(self):
@@ -1220,6 +1328,7 @@ class Ui_HentaiFoxDesktop(QMainWindow):
             self.browserMenu.zoom_reset.setEnabled(True)
             self.browserMenu.download.setEnabled(True)
             self.browserMenu.copypasta.setEnabled(True)
+            self.browserMenu.result_file.setDisabled(True)
             #endregion
             qurl = self.tabs.currentWidget().url()
             self.update_urlbar(qurl, self.tabs.currentWidget())
@@ -1245,6 +1354,7 @@ class Ui_HentaiFoxDesktop(QMainWindow):
             self.browserMenu.zoom_reset.setDisabled(True)
             self.browserMenu.download.setDisabled(True)
             self.browserMenu.copypasta.setDisabled(True)
+            self.browserMenu.result_file.setEnabled(True)
             #endregion
             term = self.tabs.currentWidget().term
             self.urlbar.setText(term)
@@ -1267,6 +1377,246 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         if isinstance(self.tabs.currentWidget(),QWebEngineView) == True:
             self.tabs.currentWidget().setUrl(QUrl("https://hentaifox.com/"))
 
+    def create_result_tab(self,tups,term):
+        list_of_tuples = tups
+        stack_page_count = int((len(list_of_tuples)+5)/6)
+
+        if stack_page_count >= 1:
+            overall_widget = QWidget(self.tabs)
+            overall_widget.results = []
+            for tu in list_of_tuples:
+                overall_widget.results.append(tu[0])
+            overall_widget.term = term
+            layout_ = QVBoxLayout(overall_widget)
+            stack = QStackedWidget()
+            layout_.addWidget(stack)
+            bottom_tools = QHBoxLayout()
+
+            #region button functions
+            def arrow_right_pressed():
+                index = stack.currentIndex()
+                total = stack.count()
+                if index+1 < stack_page_count:
+                    if index+1 >= total:
+                            new_first_i = int((index+1)*6)
+                            i = add_stack_page(new_first_i)
+                            stack.setCurrentIndex(i)
+                    else:
+                        stack.setCurrentIndex(index+1)
+                    current_page.setText(f"{index+2}/{stack_page_count}")
+            def arrow_left_pressed():
+                index = stack.currentIndex()
+                if index > 0:
+                    stack.setCurrentIndex(index-1)
+                    current_page.setText(f"{index}/{stack_page_count}")
+            #endregion
+
+            arrow_right = QPushButton()
+            arrow_right.setIcon(QIcon("Icons/arrow_right.png"))
+            arrow_right.clicked.connect(arrow_right_pressed)
+            arrow_left = QPushButton()
+            arrow_left.setIcon(QIcon("Icons/arrow_left.png"))
+            arrow_left.clicked.connect(arrow_left_pressed)
+            current_page = QLabel()
+            current_page.setAlignment(QtCore.Qt.AlignCenter)
+            current_page.setFont(font11)
+            current_page.setText(f"1/{stack_page_count}")
+            bottom_tools.addWidget(arrow_left)
+            bottom_tools.addWidget(current_page)
+            bottom_tools.addWidget(arrow_right)
+            layout_.addLayout(bottom_tools)
+
+            #region def gal_view
+            def gal_view(index):
+                try:
+                    tu = list_of_tuples[index]
+                    id = tu[0]
+                    title = tu[1].replace('|','\n')
+                    pages = int(tu[2])
+                    cover_url = tu[3]
+                    content = QWidget()
+                    layout = QHBoxLayout(content)
+                    content.image = QWebEngineView(content)
+                    content.image.setMinimumSize(175,242)
+                    content.image.setUrl(QUrl(cover_url))
+                    content.image.setSizePolicy(QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum))
+
+                    #region id overlay
+                    id_overlay = QLabel(content.image)
+                    palette = QPalette()
+                    brush = QBrush(QColor(255, 255, 255, 255))
+                    brush.setStyle(Qt.SolidPattern)
+                    palette.setBrush(QPalette.Active, QPalette.WindowText, brush)
+                    palette.setBrush(QPalette.Inactive, QPalette.WindowText, brush)
+                    brush1 = QBrush(QColor(120, 120, 120, 255))
+                    brush1.setStyle(Qt.SolidPattern)
+                    palette.setBrush(QPalette.Disabled, QPalette.WindowText, brush1)
+                    id_overlay.setPalette(palette)
+                    id_overlay.setStyleSheet("background-color: rgba(10,10,10,0.6)")
+                    id_overlay.setFont(font10)
+                    id_overlay.setText(str(id))
+                    id_overlay.adjustSize()
+                    #endregion
+                    match = str(re.search(term, title, re.IGNORECASE))
+                    case_term = match[match.find("match")+7:-2]
+
+                    title = "<html><head/><body><p>" + re.sub(f"{term}",f"<span style=\" font-weight:600;\">{case_term}</span>",title,flags=re.IGNORECASE) + "</p></body></html>"
+
+                    layout2 = QVBoxLayout()
+                    title_box = QLabel()
+                    title_box.setAlignment(Qt.AlignCenter)
+                    title_box.setWordWrap(True)
+                    title_box.setText(title)
+                    title_box.setFont(font12)
+                    layout2.addWidget(title_box)
+                    pages_box = QLabel()
+                    pages_box.setAlignment(Qt.AlignCenter)
+                    pages_box.setText(f"Pages: {pages}")
+                    pages_box.setFont(font11)
+                    layout2.addWidget(pages_box)
+                    artist_box = QLabel()
+                    artist_box.setAlignment(Qt.AlignCenter)
+                    artist_box.setWordWrap(True)
+                    artist_box.setFont(font11)
+                    tags_box = QComboBox()
+                    parodies_box = QLabel()
+                    parodies_box.setAlignment(Qt.AlignCenter)
+                    parodies_box.setWordWrap(True)
+                    parodies_box.setFont(font11)
+                    groups_box = QLabel()
+                    groups_box.setAlignment(Qt.AlignCenter)
+                    groups_box.setWordWrap(True)
+                    groups_box.setFont(font11)
+                    category_box = QLabel()
+                    category_box.setAlignment(Qt.AlignCenter)
+                    category_box.setWordWrap(True)
+                    category_box.setFont(font12)
+
+                    c.execute(f"SELECT tag FROM galleryartists WHERE gal={id}")
+                    list_ = c.fetchall()
+                    if len(list_) > 0:
+                        art = "Artist:"
+                        comb = " "
+                        for tu in list_:
+                            art = art + comb + tu[0]
+                            comb = " | "
+                        artist_box.setText(art)
+                        layout2.addWidget(artist_box)
+                    c.execute(f"SELECT tag FROM gallerygroups WHERE gal={id}")
+                    list_ = c.fetchall()
+                    if len(list_) > 0:
+                        grp = "Groups:"
+                        for tu in list_:
+                            grp = grp + f"\n{tu[0]}"
+                        groups_box.setText(grp)
+                        layout2.addWidget(groups_box)
+                    c.execute(f"SELECT tag FROM galleryparodies WHERE gal={id}")
+                    list_ = c.fetchall()
+                    if len(list_) > 0:
+                        par = "Parodies:"
+                        for tu in list_:
+                            par = par + f"\n{tu[0]}"
+                        parodies_box.setText(par)
+                        layout2.addWidget(parodies_box)
+                    c.execute(f"SELECT tag FROM gallerycategories WHERE gal={id}")
+                    list_ = c.fetchall()
+                    if len(list_) > 0:
+                        cat = list_[0][0]
+                        category_box.setText(cat)
+                        layout2.addWidget(category_box)
+                    #region def open tag
+                    def open_tag(tag):
+                        if tag != "View Tags":
+                            tag = tag.replace(" ", "-")
+                            qurl = QtCore.QUrl(f"https://hentaifox.com/tag/{tag}/")
+                            self.add_new_tab(qurl, label="loading...")
+                    #endregion
+                    tags_box.addItem("View Tags")
+                    c.execute(f"SELECT tag FROM gallerytags WHERE gal={id}")
+                    list_ = c.fetchall()
+                    for tu in list_:
+                        tags_box.addItem(tu[0])
+                    tags_box.activated.connect(lambda index=tags_box.activated: open_tag(tags_box.itemText(index)))
+                    layout2.addWidget(tags_box)
+
+                    #region open button Pressed
+                    def open_button_pressed():
+                        url = f"https://hentaifox.com/gallery/{id}/"
+                        self.add_new_tab(QUrl(url))
+                    #endregion
+                    open_button = QPushButton()
+                    open_button.setText("Open")
+                    open_button.clicked.connect(open_button_pressed)
+                    layout2.addWidget(open_button)
+
+                    #region clipboard button Pressed
+                    def clipboard_button_pressed():
+                        url = f"https://hentaifox.com/gallery/{id}/"
+                        pyperclip.copy(url)
+                    #endregion
+                    clipboard_button = QPushButton()
+                    clipboard_button.setText("Copy URL")
+                    clipboard_button.clicked.connect(clipboard_button_pressed)
+                    layout2.addWidget(clipboard_button)
+
+                    layout.addWidget(content.image)
+                    layout.addLayout(layout2)
+                except IndexError:
+                    content = QWidget()
+                    layout = QHBoxLayout(content)
+                    content.image = QLabel(content)
+                    content.image.setMinimumSize(175,242)
+                    content.image.setText("")
+                    text = QLabel(content)
+                    text.setAlignment(Qt.AlignCenter)
+                    text.setText("")
+                    layout.addWidget(content.image)
+                    layout.addWidget(text)
+                return content
+            #endregion
+            #region def row
+            def row(first_index):
+                row_ = QHBoxLayout()
+                row_.addWidget(gal_view(first_index))
+                def line():
+                    line_ = QFrame()
+                    line_.setLineWidth(4)
+                    line_.setFrameShape(QFrame.VLine)
+                    line_.setFrameShadow(QFrame.Sunken)
+                    return line_
+                row_.addWidget(line())
+                row_.addWidget(gal_view(first_index+1))
+                row_.addWidget(line())
+                row_.addWidget(gal_view(first_index+2))
+                return row_
+            #endregion
+            #region def page
+            def page(first_index):
+                page_ = QWidget()
+                layout = QVBoxLayout(page_)
+                layout.addLayout(row(first_index))
+                line = QFrame()
+                line.setLineWidth(4)
+                line.setFrameShape(QFrame.HLine)
+                line.setFrameShadow(QFrame.Sunken)
+                layout.addWidget(line)
+                layout.addLayout(row(first_index+3))
+                return page_
+            #endregion
+            #region fill stack
+            def add_stack_page(first_index):
+                return stack.addWidget(page(first_index))
+            #endregion
+
+            add_stack_page(0)
+        else:
+            overall_widget = QLabel(self.tabs)
+            overall_widget.setAlignment(Qt.AlignCenter)
+            overall_widget.setFont(font30)
+            overall_widget.setText(f'Sorry no results for "{term}"')
+        i = self.tabs.addTab(overall_widget, f'"{term}" - {len(list_of_tuples)} results')
+        self.tabs.setCurrentIndex(i)
+
     def navigate_to_url(self):
         q = QUrl(self.urlbar.text())
         url_raw = q.url()
@@ -1287,240 +1637,7 @@ class Ui_HentaiFoxDesktop(QMainWindow):
                 term_ = term.replace("'","''")
                 c.execute(f"SELECT * FROM galleryinformation WHERE title LIKE '%{term_}%' ORDER BY gal DESC")
                 list_of_tuples = c.fetchall()
-
-                stack_page_count = int((len(list_of_tuples)+5)/6)
-                if stack_page_count >= 1:
-                    overall_widget = QWidget(self.tabs)
-                    overall_widget.term = term
-                    layout_ = QVBoxLayout(overall_widget)
-                    stack = QStackedWidget()
-                    layout_.addWidget(stack)
-                    bottom_tools = QHBoxLayout()
-
-                    #region button functions
-                    def arrow_right_pressed():
-                        index = stack.currentIndex()
-                        total = stack.count()
-                        if index+1 < stack_page_count:
-                            if index+1 >= total:
-                                    new_first_i = int((index+1)*6)
-                                    i = add_stack_page(new_first_i)
-                                    stack.setCurrentIndex(i)
-                            else:
-                                stack.setCurrentIndex(index+1)
-                            current_page.setText(f"{index+2}/{stack_page_count}")
-                    def arrow_left_pressed():
-                        index = stack.currentIndex()
-                        if index > 0:
-                            stack.setCurrentIndex(index-1)
-                            current_page.setText(f"{index}/{stack_page_count}")
-                    #endregion
-
-                    arrow_right = QPushButton()
-                    arrow_right.setIcon(QIcon("Icons/arrow_right.png"))
-                    arrow_right.clicked.connect(arrow_right_pressed)
-                    arrow_left = QPushButton()
-                    arrow_left.setIcon(QIcon("Icons/arrow_left.png"))
-                    arrow_left.clicked.connect(arrow_left_pressed)
-                    current_page = QLabel()
-                    current_page.setAlignment(QtCore.Qt.AlignCenter)
-                    current_page.setFont(font11)
-                    current_page.setText(f"1/{stack_page_count}")
-                    bottom_tools.addWidget(arrow_left)
-                    bottom_tools.addWidget(current_page)
-                    bottom_tools.addWidget(arrow_right)
-                    layout_.addLayout(bottom_tools)
-
-                    #region def gal_view
-                    def gal_view(index):
-                        try:
-                            tu = list_of_tuples[index]
-                            id = tu[0]
-                            title = tu[1].replace('|','\n')
-                            pages = int(tu[2])
-                            cover_url = tu[3]
-                            content = QWidget()
-                            layout = QHBoxLayout(content)
-                            content.image = QWebEngineView(content)
-                            content.image.setMinimumSize(175,242)
-                            content.image.setUrl(QUrl(cover_url))
-                            content.image.setSizePolicy(QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum))
-
-                            #region id overlay
-                            id_overlay = QLabel(content.image)
-                            palette = QPalette()
-                            brush = QBrush(QColor(255, 255, 255, 255))
-                            brush.setStyle(Qt.SolidPattern)
-                            palette.setBrush(QPalette.Active, QPalette.WindowText, brush)
-                            palette.setBrush(QPalette.Inactive, QPalette.WindowText, brush)
-                            brush1 = QBrush(QColor(120, 120, 120, 255))
-                            brush1.setStyle(Qt.SolidPattern)
-                            palette.setBrush(QPalette.Disabled, QPalette.WindowText, brush1)
-                            id_overlay.setPalette(palette)
-                            id_overlay.setStyleSheet("background-color: rgba(10,10,10,0.6)")
-                            id_overlay.setFont(font10)
-                            id_overlay.setText(str(id))
-                            id_overlay.adjustSize()
-                            #endregion
-                            match = str(re.search(term, title, re.IGNORECASE))
-                            case_term = match[match.find("match")+7:-2]
-
-                            title = "<html><head/><body><p>" + re.sub(f"{term}",f"<span style=\" font-weight:600;\">{case_term}</span>",title,flags=re.IGNORECASE) + "</p></body></html>"
-
-                            layout2 = QVBoxLayout()
-                            title_box = QLabel()
-                            title_box.setAlignment(Qt.AlignCenter)
-                            title_box.setWordWrap(True)
-                            title_box.setText(title)
-                            title_box.setFont(font12)
-                            layout2.addWidget(title_box)
-                            pages_box = QLabel()
-                            pages_box.setAlignment(Qt.AlignCenter)
-                            pages_box.setText(f"Pages: {pages}")
-                            pages_box.setFont(font11)
-                            layout2.addWidget(pages_box)
-                            artist_box = QLabel()
-                            artist_box.setAlignment(Qt.AlignCenter)
-                            artist_box.setWordWrap(True)
-                            artist_box.setFont(font11)
-                            tags_box = QComboBox()
-                            parodies_box = QLabel()
-                            parodies_box.setAlignment(Qt.AlignCenter)
-                            parodies_box.setWordWrap(True)
-                            parodies_box.setFont(font11)
-                            groups_box = QLabel()
-                            groups_box.setAlignment(Qt.AlignCenter)
-                            groups_box.setWordWrap(True)
-                            groups_box.setFont(font11)
-                            category_box = QLabel()
-                            category_box.setAlignment(Qt.AlignCenter)
-                            category_box.setWordWrap(True)
-                            category_box.setFont(font12)
-
-                            c.execute(f"SELECT tag FROM galleryartists WHERE gal={id}")
-                            list_ = c.fetchall()
-                            if len(list_) > 0:
-                                art = "Artist:"
-                                comb = " "
-                                for tu in list_:
-                                    art = art + comb + tu[0]
-                                    comb = " | "
-                                artist_box.setText(art)
-                                layout2.addWidget(artist_box)
-                            c.execute(f"SELECT tag FROM gallerygroups WHERE gal={id}")
-                            list_ = c.fetchall()
-                            if len(list_) > 0:
-                                grp = "Groups:"
-                                for tu in list_:
-                                    grp = grp + f"\n{tu[0]}"
-                                groups_box.setText(grp)
-                                layout2.addWidget(groups_box)
-                            c.execute(f"SELECT tag FROM galleryparodies WHERE gal={id}")
-                            list_ = c.fetchall()
-                            if len(list_) > 0:
-                                par = "Parodies:"
-                                for tu in list_:
-                                    par = par + f"\n{tu[0]}"
-                                parodies_box.setText(par)
-                                layout2.addWidget(parodies_box)
-                            c.execute(f"SELECT tag FROM gallerycategories WHERE gal={id}")
-                            list_ = c.fetchall()
-                            if len(list_) > 0:
-                                cat = list_[0][0]
-                                category_box.setText(cat)
-                                layout2.addWidget(category_box)
-                            #region def open tag
-                            def open_tag(tag):
-                                if tag != "View Tags":
-                                    tag = tag.replace(" ", "-")
-                                    qurl = QtCore.QUrl(f"https://hentaifox.com/tag/{tag}/")
-                                    self.add_new_tab(qurl, label="loading...")
-                            #endregion
-                            tags_box.addItem("View Tags")
-                            c.execute(f"SELECT tag FROM gallerytags WHERE gal={id}")
-                            list_ = c.fetchall()
-                            for tu in list_:
-                                tags_box.addItem(tu[0])
-                            tags_box.activated.connect(lambda index=tags_box.activated: open_tag(tags_box.itemText(index)))
-                            layout2.addWidget(tags_box)
-
-                            #region open button Pressed
-                            def open_button_pressed():
-                                url = f"https://hentaifox.com/gallery/{id}/"
-                                self.add_new_tab(QUrl(url))
-                            #endregion
-                            open_button = QPushButton()
-                            open_button.setText("Open")
-                            open_button.clicked.connect(open_button_pressed)
-                            layout2.addWidget(open_button)
-
-                            #region clipboard button Pressed
-                            def clipboard_button_pressed():
-                                url = f"https://hentaifox.com/gallery/{id}/"
-                                pyperclip.copy(url)
-                            #endregion
-                            clipboard_button = QPushButton()
-                            clipboard_button.setText("Copy URL")
-                            clipboard_button.clicked.connect(clipboard_button_pressed)
-                            layout2.addWidget(clipboard_button)
-
-                            layout.addWidget(content.image)
-                            layout.addLayout(layout2)
-                        except IndexError:
-                            content = QWidget()
-                            layout = QHBoxLayout(content)
-                            content.image = QLabel(content)
-                            content.image.setMinimumSize(175,242)
-                            content.image.setText("")
-                            text = QLabel(content)
-                            text.setAlignment(Qt.AlignCenter)
-                            text.setText("")
-                            layout.addWidget(content.image)
-                            layout.addWidget(text)
-                        return content
-                    #endregion
-                    #region def row
-                    def row(first_index):
-                        row_ = QHBoxLayout()
-                        row_.addWidget(gal_view(first_index))
-                        def line():
-                            line_ = QFrame()
-                            line_.setLineWidth(4)
-                            line_.setFrameShape(QFrame.VLine)
-                            line_.setFrameShadow(QFrame.Sunken)
-                            return line_
-                        row_.addWidget(line())
-                        row_.addWidget(gal_view(first_index+1))
-                        row_.addWidget(line())
-                        row_.addWidget(gal_view(first_index+2))
-                        return row_
-                    #endregion
-                    #region def page
-                    def page(first_index):
-                        page_ = QWidget()
-                        layout = QVBoxLayout(page_)
-                        layout.addLayout(row(first_index))
-                        line = QFrame()
-                        line.setLineWidth(4)
-                        line.setFrameShape(QFrame.HLine)
-                        line.setFrameShadow(QFrame.Sunken)
-                        layout.addWidget(line)
-                        layout.addLayout(row(first_index+3))
-                        return page_
-                    #endregion
-                    #region fill stack
-                    def add_stack_page(first_index):
-                        return stack.addWidget(page(first_index))
-                    #endregion
-
-                    add_stack_page(0)
-                else:
-                    overall_widget = QLabel(self.tabs)
-                    overall_widget.setAlignment(Qt.AlignCenter)
-                    overall_widget.setFont(font30)
-                    overall_widget.setText(f'Sorry no results for "{term}"')
-                i = self.tabs.addTab(overall_widget, f'"{term}" - {len(list_of_tuples)} results')
-                self.tabs.setCurrentIndex(i)
+                self.create_result_tab(list_of_tuples,term)
 
     def update_urlbar(self, q, browser=None):
         if browser != self.tabs.currentWidget():
@@ -1578,12 +1695,10 @@ class Ui_HentaiFoxDesktop(QMainWindow):
                 foldername = filename.replace(" ","_")
                 dir = image_url[[m.start() for m in re.finditer("/",image_url)][2]+1:[m.start() for m in re.finditer("/",image_url)][3]]
                 eh_id = image_url[[m.start() for m in re.finditer("/",image_url)][3]+1:[m.start() for m in re.finditer("/",image_url)][4]]
-
-
-                with open("temp.json","w") as f:
-                     data = [f"{id}",f"{title}",f"{pages}",f"{dir}",f"{eh_id}"]
-                     json.dump(data,f,indent=4)
-                     subprocess.Popen("python download.py",shell=True)
+                data = [f"{id}",f"{title}",f"{pages}",f"{dir}",f"{eh_id}"]
+                dwl = Ui_Download(self)
+                dwl.data_(data)
+                _ = dwl.show()
 
     def add_bookmark(self):
         if isinstance(self.tabs.currentWidget(),QWebEngineView) == True:
@@ -1685,7 +1800,6 @@ class Ui_HentaiFoxDesktop(QMainWindow):
                     if len(wiki_description) > 180:
                         positions = ( [pos for pos, char in enumerate(wiki_description) if char == " "])
                         postition = min(positions, key=lambda x:abs(x-170))
-                        print(postition)
                         wiki_description = f"{wiki_description[:postition]}\n{wiki_description[postition:]}"
 
 
@@ -1755,10 +1869,10 @@ class Ui_HentaiFoxDesktop(QMainWindow):
                     self.gallery_scraping_overlay.show()
                     self.gallery_info_overlay.hide()
                     self.gallery_taginfo_overlay.hide()
-                    print(f"Gallery with ID [{id}] not in Database, updating Database...")
                     QtWidgets.qApp.processEvents()
 
                     if id not in not_in_database:
+                        print(f"Gallery with ID [{id}] not in Database, updating Database...")
                         try_update = self.update_database()
                         if try_update == 0:
                             msg = QtWidgets.QMessageBox(self.tabs)
@@ -1767,6 +1881,22 @@ class Ui_HentaiFoxDesktop(QMainWindow):
                             msg.exec_()
                             not_in_database.append(id)
                     self.gallery_scraping_overlay.hide()
+
+    def create_result_file(self):
+        if isinstance(self.tabs.currentWidget(),QWidget):
+            results = self.tabs.currentWidget().results
+            term = str(self.tabs.currentWidget().term).replace(":","_").replace("/","_").replace("*","·").replace('"',"'").replace("|","_").replace("<","[").replace(">","]").replace("?","")
+            filename = f"[term]_{term}"
+            if len(results) > 0:
+                with open(f"Results (TXT)/{filename}.txt", "w+") as t:
+                    for gallery in results:
+                        t.write(f"https://hentaifox.com/gallery/{gallery}/\n")
+                with open(f"Results (JSON)/{filename}.result", "w") as j:
+                    data = []
+                    for gallery in results:
+                        data.append(gallery)
+                    json.dump(data, j, indent=4)
+                self.tabWidget.setCurrentIndex(2)
 
     def deactivate_taginformation(self):
         loc.execute("UPDATE settings SET value = '0' WHERE setting ='tag_info_setting'")
@@ -1823,6 +1953,8 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         self.browserMenu.addSeparator()
         self.browserMenu.download = self.browserMenu.addAction(QIcon("icons/download.png"),"Download current Gallery",self.download,QKeySequence("Ctrl+S"))
         self.browserMenu.copypasta = self.browserMenu.addAction(QIcon("icons/copy.png"),"Copy page URL to clipboard",self.copy_url,QKeySequence("Ctrl+Shift+C"))
+        self.browserMenu.result_file = self.browserMenu.addAction(QIcon("icons/wirte_file.png"),"Create .result of this search",self.create_result_file,QKeySequence("Ctrl+B"))
+        self.browserMenu.result_file.setDisabled(True)
         self.browserMenu.addSeparator()
         self.settingsMenu = self.browserMenu.addMenu(QIcon("icons/setting_icon.png"),"Settings")
         self.browserMenu.addSeparator()
@@ -1876,6 +2008,16 @@ class Ui_HentaiFoxDesktop(QMainWindow):
             white_list[self.choosetype.currentText()].append(item.text())
             item_list[self.choosetype.currentText()].remove(item.text())
 
+    def whitelist_clear(self):
+        for _ in range(self.whitelist.count()):
+            item_raw = self.whitelist.takeItem(0)
+            item_name = item_raw.text()[:item_raw.text().find(" (")]
+            item_type = item_raw.text()[item_raw.text().find("(") + 1:item_raw.text().find(")")]
+            white_list[item_type].remove(item_name)
+            item_list[item_type].append(item_name)
+            item_list[item_type].sort()
+        self.update_taglist()
+
     def whitelist_remove(self):
         current = self.whitelist.currentItem()
         if current != None:
@@ -1895,6 +2037,16 @@ class Ui_HentaiFoxDesktop(QMainWindow):
             self.blacklist.addItem(f"{item.text()} ({type})")
             black_list[self.choosetype.currentText()].append(item.text())
             item_list[self.choosetype.currentText()].remove(item.text())
+
+    def blacklist_clear(self):
+        for _ in range(self.blacklist.count()):
+            item_raw = self.blacklist.takeItem(0)
+            item_name = item_raw.text()[:item_raw.text().find(" (")]
+            item_type = item_raw.text()[item_raw.text().find("(") + 1:item_raw.text().find(")")]
+            black_list[item_type].remove(item_name)
+            item_list[item_type].append(item_name)
+            item_list[item_type].sort()
+        self.update_taglist()
 
     def blacklist_remove(self):
         current = self.blacklist.currentItem()
@@ -2132,6 +2284,8 @@ class Ui_HentaiFoxDesktop(QMainWindow):
                 data = json.load(f)
                 for gallery in data:
                     result_view_list.append(gallery)
+        self.result_file_name = result_file
+        self.open_in_result_tab_button.setEnabled(True)
         self.display_results()
 
     def display_results(self):
@@ -2149,18 +2303,25 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         if len(result_view_list) > 0:
             c.execute(
                 f"SELECT * FROM galleryinformation WHERE gal IN {tuple(result_view_list)} ORDER BY {feature} {up_down}")
+            self.list_of_tuples = c.fetchall()
             if self.choosedisplaytype.currentText() == "ID":
-                for tu in c.fetchall():
+                for tu in self.list_of_tuples:
                     item = QtWidgets.QListWidgetItem()
                     item.setText(str(tu[0]))
                     item.setToolTip(tu[1])
                     self.resultlist.addItem(item)
             elif self.choosedisplaytype.currentText() == "TITLE":
-                for tu in c.fetchall():
+                for tu in self.list_of_tuples:
                     item = QtWidgets.QListWidgetItem()
                     item.setText(tu[1])
                     item.setToolTip(str(tu[0]))
                     self.resultlist.addItem(item)
+
+    def open_in_result_tab(self):
+        tups = self.list_of_tuples
+        term = self.result_file_name
+        self.create_result_tab(tups,term)
+        self.tabWidget.setCurrentIndex(0)
 
     def preview(self):
         if self.resultlist.currentItem() != None:
