@@ -40,6 +40,7 @@ item_list = {}
 result_view_list = []
 tag_info_setting = 0
 not_in_database = []
+_version_ = "v.3.2"
 #endregion
 # region---Define-Converter----------
 def type_converter(type):
@@ -94,7 +95,69 @@ font30.setFamily("Arial")
 font30.setPointSize(30)
 font30.setWeight(80)
 #endregion
-#region database_download_dialog
+# region credentials dialoge
+class Credentials_dialog(QDialog):
+    def __init__(self, *args, **kwargs):
+        super(Credentials_dialog, self).__init__(*args, **kwargs)
+        self.setObjectName("Credentials_dialog")
+        self.setWindowFlags(Qt.Dialog | Qt.WindowStaysOnTopHint | Qt.WindowTitleHint | Qt.WindowCloseButtonHint)
+        self.resize(500, 500)
+        # p = QDesktopWidget().availableGeometry().center() - QPoint(250,250)
+        # self.move(p)
+        self.lineEdit_U = QLineEdit(self)
+        self.lineEdit_U.setObjectName(u"lineEdit_U")
+        self.lineEdit_U.setGeometry(QRect(20, 60, 461, 41))
+        self.label_U = QLabel(self)
+        self.label_U.setObjectName(u"label_U")
+        self.label_U.setFont(font14)
+        self.label_U.setGeometry(QRect(20, 20, 451, 31))
+        self.label_U.setAlignment(Qt.AlignCenter)
+        self.label_Pw = QLabel(self)
+        self.label_Pw.setObjectName(u"label_Pw")
+        self.label_Pw.setFont(font14)
+        self.label_Pw.setGeometry(QRect(20, 110, 451, 31))
+        self.label_Pw.setAlignment(Qt.AlignCenter)
+        self.lineEdit_Pw = QLineEdit(self)
+        self.lineEdit_Pw.setObjectName(u"lineEdit_Pw")
+        self.lineEdit_Pw.setGeometry(QRect(20, 150, 461, 41))
+        self.label_info = QLabel(self)
+        self.label_info.setObjectName(u"label_info")
+        self.label_info.setFont(font11)
+        self.label_info.setGeometry(QRect(30, 210, 461, 170))
+        self.label_info.setAlignment(Qt.AlignHCenter|Qt.AlignTop)
+        self.label_info.setWordWrap(True)
+        self.save_button = QPushButton(self)
+        self.save_button.setObjectName(u"save_button")
+        self.save_button.setFont(font15)
+        self.save_button.setGeometry(QRect(20, 390, 461, 91))
+
+        self.label_U.setText("Username:")
+        self.label_Pw.setText("Password:")
+        self.label_info.setText("Warning:\nThe password will be saved as plaintext in the local database and can easily be read by other programs.\nUse on your own risk!\nBy leaving both fields empty you can delete your credentials.\nYou can disable this functions in the Menu")
+        self.save_button.setText("Save")
+        loc.execute("SELECT * FROM credentials WHERE TRUE")
+        list_of_tuples = loc.fetchall()
+        if list_of_tuples != [('', '')]:
+            username = list_of_tuples[0][0]
+            password = list_of_tuples[0][1]
+            self.lineEdit_U.setPlaceholderText(username)
+            self.lineEdit_Pw.setPlaceholderText(password)
+
+
+        self.save_button.clicked.connect(self.update_credentials)
+
+    def update_credentials(self):
+        loc.execute(f"DELETE FROM credentials WHERE TRUE")              # for now remove everything so that only a single account exists
+        localdb.commit()
+        username = self.lineEdit_U.text().replace("'","''")
+        password = self.lineEdit_Pw.text().replace("'","''")
+        loc.execute(f"INSERT INTO credentials VALUES ('{username}','{password}')")
+        localdb.commit()
+        print(f"Saved Username:[{username}]\nSaved Password:[{password}]")
+        self.done(0)
+
+# endregion
+# region database_download_dialog
 class Ui_Dialog(QDialog):
     def __init__(self, *args, **kwargs):
         super(Ui_Dialog, self).__init__(*args, **kwargs)
@@ -117,8 +180,6 @@ class Ui_Dialog(QDialog):
         self.label.setText("<html><head/><body><p><span style=\" font-size:12pt;\">Downloading database</span></p><p><span style=\" font-size:12pt;\">This may take a while...</span></p></body></html>")
 #endregion
 # region download class
-
-
 class DownloadThread(QThread):
     signal = pyqtSignal('PyQt_PyObject')
     message = pyqtSignal('PyQt_PyObject')
@@ -377,6 +438,9 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         self.verticalLayout_21 = QtWidgets.QVBoxLayout(self.tab)
         self.verticalLayout_21.setObjectName("verticalLayout_21")
         self.verticalLayout.addWidget(self.tabs)
+
+        # self.info_button = QPushButton(self.browse)
+        # self.info_button.hide()
 
         self.hover_url = QLabel(self.browse)
         self.hover_url.setStyleSheet("background-color: white")
@@ -1112,6 +1176,7 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         self.zoomslider.sliderMoved.connect(self.zoom_browser)
         self.urlbar.returnPressed.connect(self.navigate_to_url)
         self.downloadbutton.clicked.connect(self.download)
+        # self.info_button.clicked.connect(self.find_more_info)
         # endregion
         # region---------multi-search-signals-----------------------------------
         self.choosetype.activated.connect(self.update_taglist)
@@ -1165,7 +1230,7 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         _translate = QtCore.QCoreApplication.translate
         HentaiFoxDesktop.setWindowTitle(_translate("HentaiFoxDesktop", "HentaiFox Desktop"))
         self.label_version.setText(
-            _translate("HentaiFoxDesktop", "<html><head/><body><p>HF-Desktop v.3.0</p></body></html>"))
+            _translate("HentaiFoxDesktop", f"<html><head/><body><p>HF-Desktop {_version_}</p></body></html>"))
         self.downloadbutton.setText(_translate("HentaiFoxDesktop", "Download Gallery"))
         self.label_zoom.setText(_translate("HentaiFoxDesktop", "Zoom:"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.browse), _translate("HentaiFoxDesktop", "Browse"))
@@ -1288,8 +1353,8 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         i = self.tabs.addTab(browser, label)
         self.tabs.setCurrentIndex(i)
         browser.urlChanged.connect(lambda qurl, browser=browser: self.update_urlbar(qurl, browser))
-        browser.loadFinished.connect(
-            lambda _, i=i, browser=browser: self.tabs.setTabText(i, str(str(browser.page().title())[:20]+"...")))
+        browser.loadFinished.connect(lambda _, browser=browser: self.on_load_finished(browser))
+        browser.loadFinished.connect(lambda _, i=i, browser=browser: self.tabs.setTabText(i, str(str(browser.page().title())[:20]+"...")))
         browser.page().linkHovered.connect(lambda url=browser.page().linkHovered: self.link_hovered(url))
 
     def create_new_tab(self, page):
@@ -1300,8 +1365,8 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         if switch_tabs_setting == 1:
             self.tabs.setCurrentIndex(i)
         browser.urlChanged.connect(lambda qurl, browser=browser: self.update_urlbar(qurl, browser))
-        browser.loadFinished.connect(
-            lambda _, i=i, browser=browser: self.tabs.setTabText(i, str(str(browser.page().title())[:20]+"...")))
+        browser.loadFinished.connect(lambda _, browser=browser: self.on_load_finshed(browser))
+        browser.loadFinished.connect(lambda _, i=i, browser=browser: self.tabs.setTabText(i, str(str(browser.page().title())[:20]+"...")))
         browser.page().linkHovered.connect(lambda url=browser.page().linkHovered: self.link_hovered(url))
 
     def tab_open_doubleclick(self, i):
@@ -1639,6 +1704,11 @@ class Ui_HentaiFoxDesktop(QMainWindow):
                 list_of_tuples = c.fetchall()
                 self.create_result_tab(list_of_tuples,term)
 
+    def on_load_finished(self,browser):
+        url = browser.url().url()
+        if url.startswith("https://hentaifox.com/login"):
+            self.fill_credentials()
+
     def update_urlbar(self, q, browser=None):
         if browser != self.tabs.currentWidget():
             return
@@ -1653,7 +1723,63 @@ class Ui_HentaiFoxDesktop(QMainWindow):
                     browser.back()
                 else:
                     self.tabs.removeTab(self.tabs.currentIndex())
+            # elif q.toString().startswith("https://hentaifox.com/gallery/"):
+            #     id = q.toString()[30:-1]
+            #     self.more_information()
+            # else:
+            #     self.info_button.hide()
             self.tabs.setTabText(self.tabs.currentIndex(), str(str(browser.page().title())[:20]+"..."))
+
+    #region hitomi.la wip
+    # def more_information(self):
+    #     p = self.browse.geometry().bottomLeft() + QPoint(20,-100)
+    #     self.info_button.move(p)
+    #     self.info_button.raise_()
+    #     self.info_button.setText("Find More Information")
+    #     self.info_button.adjustSize()
+    #     self.info_button.show()
+    #
+    # def find_more_info(self):
+    #     url = self.tabs.currentWidget().url().url()
+    #     id = url[30:-1]
+    #     c.execute(f"SELECT * FROM galleryinformation WHERE gal={id}")
+    #     tu = c.fetchone()
+    #     hitomi_title = tu[1].replace(" ","-").replace("'","-").lower()
+    #     if hitomi_title.endswith("-"):
+    #         hitomi_title = hitomi_title[:-1]
+    #     im_url = tu[3]
+    #     im_id = im_url[[m.start() for m in re.finditer("/",im_url)][3]+1:[m.start() for m in re.finditer("/",im_url)][4]]
+    #     c.execute(f"SELECT tag FROM gallerycategories WHERE gal={id}")
+    #     category = c.fetchone()[0]
+    #     hitomi_url = f"https://hitomi.la/{category}/{hitomi_title}-english-{im_id}.html"
+    #     print(hitomi_url)
+    #     web = requests.get(hitomi_url)
+    #     html = web.text
+    #     soup = BeautifulSoup(html, 'html.parser')
+    #     okay = soup.find('title')
+    #     if str(okay) != "<title>404 Not Found</title>":
+    #         test = soup.find("div",attrs={"class":"dj"})
+    #         print(test)
+    #endregion
+
+    def fill_credentials(self):
+        page = self.tabs.currentWidget().page()
+        if page.url().url().startswith("https://hentaifox.com/login"):                          #doublecheck to prevent bugs
+            loc.execute("SELECT value FROM settings WHERE setting='auto_fill_setting'")
+            auto_fill_setting = int(loc.fetchone()[0])
+            if auto_fill_setting == 1:
+                loc.execute("SELECT * FROM credentials WHERE TRUE")
+                list_of_tuples = loc.fetchall()
+                if list_of_tuples == [('', '')]:
+                    dwl = Credentials_dialog(self)
+                    _ = dwl.show()
+                else:
+                    username = list_of_tuples[0][0]
+                    password = list_of_tuples[0][1]
+                    page.runJavaScript("""
+                    document.getElementById('username').value="{0}"
+                    document.getElementById('password').value="{1}"
+                    """.format(username,password))
 
     def zoom_browser(self):
         webview = self.tabs.currentWidget()
@@ -1928,6 +2054,16 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         localdb.commit()
         self.create_menu()
 
+    def deactivate_auto_fill(self):
+        loc.execute("UPDATE settings SET value = '0' WHERE setting = 'auto_fill_setting'")
+        localdb.commit()
+        self.create_menu()
+
+    def activate_auto_fill(self):
+        loc.execute("UPDATE settings SET value = '1' WHERE setting = 'auto_fill_setting'")
+        localdb.commit()
+        self.create_menu()
+
     def create_menu(self):
         loc.execute("SELECT value FROM settings WHERE setting='tag_info_setting'")
         tag_info_setting = int(loc.fetchone()[0])
@@ -1935,6 +2071,8 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         switch_tabs_setting = int(loc.fetchone()[0])
         loc.execute("SELECT value FROM settings WHERE setting='gallery_info_setting'")
         gallery_info_setting = int(loc.fetchone()[0])
+        loc.execute("SELECT value FROM settings WHERE setting='auto_fill_setting'")
+        auto_fill_setting = int(loc.fetchone()[0])
 
         self.browserMenu.clear()
         self.browserMenu.back = self.browserMenu.addAction(QIcon("icons/Back_Arrow.png"),"Back",lambda: self.tabs.currentWidget().back(),QKeySequence("Ctrl+Left"))
@@ -1955,6 +2093,7 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         self.browserMenu.copypasta = self.browserMenu.addAction(QIcon("icons/copy.png"),"Copy page URL to clipboard",self.copy_url,QKeySequence("Ctrl+Shift+C"))
         self.browserMenu.result_file = self.browserMenu.addAction(QIcon("icons/wirte_file.png"),"Create .result of this search",self.create_result_file,QKeySequence("Ctrl+B"))
         self.browserMenu.result_file.setDisabled(True)
+        self.browserMenu.addAction("Change saved Credentials",lambda: Credentials_dialog(self).show())
         self.browserMenu.addSeparator()
         self.settingsMenu = self.browserMenu.addMenu(QIcon("icons/setting_icon.png"),"Settings")
         self.browserMenu.addSeparator()
@@ -1974,6 +2113,11 @@ class Ui_HentaiFoxDesktop(QMainWindow):
             self.settingsMenu.addAction(QIcon("icons/checkbox_empty.png"),"Autoswitch to new Tab when opening", self.activate_tabswitching)
         elif switch_tabs_setting == 1:
             self.settingsMenu.addAction(QIcon("icons/checkbox_checked.png"),"Autoswitch to new Tab when opening", self.deactivate_tabswitching)
+
+        if auto_fill_setting == 0:
+            self.settingsMenu.addAction(QIcon("icons/checkbox_empty.png"),"Autofill login credentials", self.activate_auto_fill)
+        elif auto_fill_setting == 1:
+            self.settingsMenu.addAction(QIcon("icons/checkbox_checked.png"),"Autofill login credentials", self.deactivate_auto_fill)
 
         self.menu_button.setMenu(self.browserMenu)
     # endregion
