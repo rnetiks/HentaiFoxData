@@ -1365,7 +1365,7 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         if switch_tabs_setting == 1:
             self.tabs.setCurrentIndex(i)
         browser.urlChanged.connect(lambda qurl, browser=browser: self.update_urlbar(qurl, browser))
-        browser.loadFinished.connect(lambda _, browser=browser: self.on_load_finshed(browser))
+        browser.loadFinished.connect(lambda _, browser=browser: self.on_load_finished(browser))
         browser.loadFinished.connect(lambda _, i=i, browser=browser: self.tabs.setTabText(i, str(str(browser.page().title())[:20]+"...")))
         browser.page().linkHovered.connect(lambda url=browser.page().linkHovered: self.link_hovered(url))
 
