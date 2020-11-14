@@ -1128,7 +1128,12 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         # endregion
         # region---------browser-setup------------------------------------------
         self.tabWidget.setCurrentIndex(0)
-        self.add_new_tab(QUrl('https://hentaifox.com/'), 'Homepage')
+        loc.execute("SELECT value FROM settings WHERE setting='login_start_setting'")
+        login_start_setting = int(loc.fetchone()[0])
+        if login_start_setting == 1:
+            self.add_new_tab(QUrl('https://hentaifox.com/login/'), 'Login')
+        else:
+            self.add_new_tab(QUrl('https://hentaifox.com/'),'Homepage')
         self.urlbar.setText("https://hentaifox.com/")
         bookmarks = []
         self.bookmarkMenu = QMenu()
@@ -1365,7 +1370,7 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         if switch_tabs_setting == 1:
             self.tabs.setCurrentIndex(i)
         browser.urlChanged.connect(lambda qurl, browser=browser: self.update_urlbar(qurl, browser))
-        browser.loadFinished.connect(lambda _, browser=browser: self.on_load_finshed(browser))
+        browser.loadFinished.connect(lambda _, browser=browser: self.on_load_finished(browser))
         browser.loadFinished.connect(lambda _, i=i, browser=browser: self.tabs.setTabText(i, str(str(browser.page().title())[:20]+"...")))
         browser.page().linkHovered.connect(lambda url=browser.page().linkHovered: self.link_hovered(url))
 
@@ -1421,10 +1426,13 @@ class Ui_HentaiFoxDesktop(QMainWindow):
             self.browserMenu.copypasta.setDisabled(True)
             self.browserMenu.result_file.setEnabled(True)
             #endregion
-            term = self.tabs.currentWidget().term
-            self.urlbar.setText(term)
-            self.urlbar.setCursorPosition(0)
-            self.update_tab_count()
+            try:
+                term = self.tabs.currentWidget().term
+                self.urlbar.setText(term)
+                self.urlbar.setCursorPosition(0)
+                self.update_tab_count()
+            except:
+                print(self.tabs.currentWidget())
         else:
             pass
 
@@ -1678,6 +1686,7 @@ class Ui_HentaiFoxDesktop(QMainWindow):
             overall_widget = QLabel(self.tabs)
             overall_widget.setAlignment(Qt.AlignCenter)
             overall_widget.setFont(font30)
+            overall_widget.term = term
             overall_widget.setText(f'Sorry no results for "{term}"')
         i = self.tabs.addTab(overall_widget, f'"{term}" - {len(list_of_tuples)} results')
         self.tabs.setCurrentIndex(i)
@@ -2064,6 +2073,16 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         localdb.commit()
         self.create_menu()
 
+    def deactivate_login_start(self):
+        loc.execute("UPDATE settings SET value = '0' WHERE setting = 'login_start_setting'")
+        localdb.commit()
+        self.create_menu()
+
+    def activate_login_start(self):
+        loc.execute("UPDATE settings SET value = '1' WHERE setting = 'login_start_setting'")
+        localdb.commit()
+        self.create_menu()
+
     def create_menu(self):
         loc.execute("SELECT value FROM settings WHERE setting='tag_info_setting'")
         tag_info_setting = int(loc.fetchone()[0])
@@ -2073,6 +2092,8 @@ class Ui_HentaiFoxDesktop(QMainWindow):
         gallery_info_setting = int(loc.fetchone()[0])
         loc.execute("SELECT value FROM settings WHERE setting='auto_fill_setting'")
         auto_fill_setting = int(loc.fetchone()[0])
+        loc.execute("SELECT value FROM settings WHERE setting='login_start_setting'")
+        login_start_setting = int(loc.fetchone()[0])
 
         self.browserMenu.clear()
         self.browserMenu.back = self.browserMenu.addAction(QIcon("icons/Back_Arrow.png"),"Back",lambda: self.tabs.currentWidget().back(),QKeySequence("Ctrl+Left"))
@@ -2118,6 +2139,11 @@ class Ui_HentaiFoxDesktop(QMainWindow):
             self.settingsMenu.addAction(QIcon("icons/checkbox_empty.png"),"Autofill login credentials", self.activate_auto_fill)
         elif auto_fill_setting == 1:
             self.settingsMenu.addAction(QIcon("icons/checkbox_checked.png"),"Autofill login credentials", self.deactivate_auto_fill)
+
+        if login_start_setting == 0:
+            self.settingsMenu.addAction(QIcon("icons/checkbox_empty.png"),"Open the loginpage when starting the program", self.activate_login_start)
+        elif login_start_setting == 1:
+            self.settingsMenu.addAction(QIcon("icons/checkbox_checked.png"),"Open the loginpage when starting the program", self.deactivate_login_start)
 
         self.menu_button.setMenu(self.browserMenu)
     # endregion
